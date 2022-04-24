@@ -1548,22 +1548,6 @@ file uploading script (which I've renamed to ~upload~).
   :defer t
   :config (setq screenshot-upload-fn "upload %s 2>/dev/null"))
 #+end_src
-*** Gtags
-
-#+begin_src emacs-lisp :tangle packages.el
-(package! xgtags :recipe (:local-repo "lisp/xgtags"))
-#+end_src
-#+begin_src emacs-lisp
-(use-package! xgtags
-  :defer t
-  :config
-  (progn
-    (require 'xgtags)
-    (add-hook 'prog-mode-hook
-              (lambda ()
-                (xgtags-mode 1)))
-   ))
-#+end_src
 *** Which func
 
 #+begin_src emacs-lisp
@@ -1581,6 +1565,18 @@ file uploading script (which I've renamed to ~upload~).
 *** Search symbol
 #+begin_src emacs-lisp
 (global-subword-mode t)
+#+end_src
+*** Gtags
+
+#+begin_src emacs-lisp :tangle packages.el
+(package! xgtags :recipe (:local-repo "lisp/xgtags"))
+#+end_src
+#+begin_src emacs-lisp
+(require 'xgtags)
+(add-hook 'c-mode-common-hook
+          (lambda ()
+            (xgtags-mode 1)))
+
 #+end_src
 *** Etrace
 
