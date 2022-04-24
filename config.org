@@ -1548,7 +1548,7 @@ file uploading script (which I've renamed to ~upload~).
   :defer t
   :config (setq screenshot-upload-fn "upload %s 2>/dev/null"))
 #+end_src
-*** Gtags and which-func
+*** Gtags
 
 #+begin_src emacs-lisp :tangle packages.el
 (package! xgtags :recipe (:local-repo "lisp/xgtags"))
@@ -1562,19 +1562,22 @@ file uploading script (which I've renamed to ~upload~).
     (add-hook 'prog-mode-hook
               (lambda ()
                 (xgtags-mode 1)))
-
-    (require 'which-func)
-    (defun my:which-func-update-avoid-minibuffer (orig-fun)
-      (if (minibuffer-window-active-p (selected-window))
-          (with-selected-window (minibuffer-selected-window)
-            (funcall orig-fun))
-        (funcall orig-fun)))
-    (advice-add 'which-func-update :around #'my:which-func-update-avoid-minibuffer)
-    (setq-default header-line-format
-				'((which-function-mode ("" which-func-format " "))))
-    (setq which-func-modes t)
-    ))
+   ))
 #+end_src
+*** Which func
+
+#+begin_src emacs-lisp
+(defun my:which-func-update-avoid-minibuffer (orig-fun)
+  (if (minibuffer-window-active-p (selected-window))
+      (with-selected-window (minibuffer-selected-window)
+        (funcall orig-fun))
+    (funcall orig-fun)))
+(advice-add 'which-func-update :around #'my:which-func-update-avoid-minibuffer)
+(setq-default header-line-format
+	      '((which-function-mode ("" which-func-format " "))))
+(which-function-mode 1)
+#+end_src
+
 *** Search symbol
 #+begin_src emacs-lisp
 (global-subword-mode t)
