@@ -1,0 +1,36 @@
+[submodule "lisp/authinfo-color-mode"]
+	path = lisp/authinfo-color-mode
+	url = https://github.com/tecosaur/authinfo-color-mode.git
+[submodule "lisp/emacs-everywhere"]
+	path = lisp/emacs-everywhere
+	url = https://github.com/tecosaur/emacs-everywhere.git
+[submodule "lisp/engrave-faces"]
+	path = lisp/engrave-faces
+	url = https://github.com/tecosaur/engrave-faces.git
+[submodule "lisp/LaTeX-auto-activating-snippets"]
+	path = lisp/LaTeX-auto-activating-snippets
+	url = https://github.com/tecosaur/LaTeX-auto-activating-snippets.git
+[submodule "lisp/lexic"]
+	path = lisp/lexic
+	url = https://github.com/tecosaur/sdcv.git
+[submodule "lisp/orgdiff"]
+	path = lisp/orgdiff
+	url = https://github.com/tecosaur/orgdiff.git
+[submodule "lisp/org-music"]
+	path = lisp/org-music
+	url = https://github.com/tecosaur/org-music.git
+[submodule "lisp/org-pandoc-import"]
+	path = lisp/org-pandoc-import
+	url = https://github.com/tecosaur/org-pandoc-import.git
+[submodule "lisp/ox-chameleon"]
+	path = lisp/ox-chameleon
+	url = https://github.com/tecosaur/ox-chameleon.git
+[submodule "lisp/pdftotext"]
+	path = lisp/pdftotext
+	url = https://github.com/tecosaur/pdftotext.el.git
+[submodule "lisp/screenshot"]
+	path = lisp/screenshot
+	url = https://github.com/tecosaur/screenshot.git
+[submodule "lisp/xgtags"]
+	path = lisp/xgtags
+	url = https://github.com/linux-xhyang/xgtags
