@@ -385,6 +385,12 @@ I'd much rather have my new buffers in ~org-mode~ than ~fundamental-mode~, hence
 #+end_src
 For some reason this + the mixed pitch hook causes issues with hydra and so I'll
 just need to resort to =SPC b o= for now.
+*** All the icons
+#+begin_src emacs-lisp
+(after! all-the-icons
+  (unless (find-font (font-spec :name "all-the-icons"))
+    (all-the-icons-install-fonts t)))
+#+end_src
 ** Doom configuration
 *** Modules
 :PROPERTIES:
@@ -684,11 +690,12 @@ fiddle with the font sizes a tad so that they visually match. Just for fun I'm
 trying out JetBrains Mono though. So far I have mixed feelings on it, some
 aspects are nice, but on others I prefer Fira.
 #+begin_src emacs-lisp
-(setq doom-font (font-spec :family "JetBrains Mono" :size 24)
-      doom-big-font (font-spec :family "JetBrains Mono" :size 36)
-      ;;doom-variable-pitch-font (font-spec :family "Overpass" :size 24)
-      doom-unicode-font (font-spec :family "JuliaMono")
-      doom-serif-font (font-spec :family "IBM Plex Mono" :weight 'light))
+  (setq doom-font (font-spec :family "JetBrains Mono" :size 18)
+        doom-big-font (font-spec :family "JetBrains Mono" :size 26)
+        ;;doom-variable-pitch-font (font-spec :family "Overpass" :size 24)
+        ;;doom-unicode-font (font-spec :family "JuliaMono")
+        ;;doom-serif-font (font-spec :family "IBM Plex Mono" :weight 'light)
+        )
 #+end_src
 
 In addition to these fonts, Merriweather is used with =nov.el=, and Alegreya as a
@@ -700,7 +707,7 @@ if the system doesn't have any of those fonts.
 
 #+name: detect-missing-fonts
 #+begin_src emacs-lisp :tangle no
-(defvar required-fonts '("JetBrainsMono.*" "JuliaMono" "IBM Plex Mono.*" "Merriweather" "Alegreya"))
+(defvar required-fonts '("JetBrains Mono" "Merriweather" "Alegreya"))
 
 (defvar available-fonts
   (delete-dups (or (font-family-list)
@@ -1186,6 +1193,22 @@ have the following.
       :extraArgs ["--gcc-toolchain=/usr"])))
   )
 #+end_src
+*** Cider
+#+begin_src emacs-lisp
+(after! cider
+(defun clerk-show ()
+    (interactive)
+    (save-buffer)
+    (let
+        ((filename
+             (buffer-file-name)))
+        (when filename
+            (cider-interactive-eval
+                (concat "(nextjournal.clerk/show! \"" filename "\")")))))
+
+(global-set-key [f9] 'clerk-show)
+  )
+#+end_src
 *** Very large files
 
 The /very large files/ mode loads large files in chunks, allowing one to open
@@ -1572,11 +1595,8 @@ file uploading script (which I've renamed to ~upload~).
 (package! xgtags :recipe (:local-repo "lisp/xgtags"))
 #+end_src
 #+begin_src emacs-lisp
-(require 'xgtags)
-(add-hook 'c-mode-common-hook
-          (lambda ()
-            (xgtags-mode 1)))
-
+  (use-package! xgtags
+                :hook (prog-mode . xgtags-mode))
 #+end_src
 *** Etrace
 
@@ -2784,25 +2804,6 @@ Now and then citations need to happen
 (package! org-ref :pin "3ca9beb744621f007d932deb8a4197467012c23a")
 #+end_src
 
-***** Julia support
-=ob-julia= is currently a bit borked, but there's an effort to improve this.
-#+begin_src emacs-lisp
-(package! ob-julia :recipe (:local-repo "lisp/ob-julia" :files ("*.el" "julia")))
-#+end_src
-
-#+begin_src emacs-lisp :tangle yes
-(use-package! ob-julia
-  :commands org-babel-execute:julia
-  :config
-  (setq org-babel-julia-command-arguments
-        `("--sysimage"
-          ,(when-let ((img "~/.local/lib/julia.so")
-                      (exists? (file-exists-p img)))
-             (expand-file-name img))
-          "--threads"
-          ,(number-to-string (- (doom-system-cpus) 2))
-          "--banner=no")))
-#+end_src
 ***** HTTP requests
 
 I like the idea of being able to make HTTP requests with Babel.
@@ -6836,50 +6837,6 @@ case.
 Treating the verbatim (no syntax highlighting) result as a baseline; this
 rudimentary test suggest that =engrave-faces= is around eight times faster than
 =pygments=, and takes three times as long as no syntax highlighting (verbatim).
-
-**** Julia code blocks
-
-Julia code has fantastic support for unicode! The downside is that =pdflatex= is
-/still/ a pain to use with unicode symbols. The solution --- =lualatex=. Now we just
-need to make it automatic
-
-#+begin_src emacs-lisp
-(defadvice! org-latex-pick-compiler (_contents info)
-  :before #'org-latex-template
-  (when (and org-export-has-code-p (memq 'julia-code (org-latex-detect-features)))
-    (setf info (plist-put
-                (if (member #'+org-latex-replace-non-ascii-chars (plist-get info :filter-final-output))
-                    (plist-put info :filter-final-output
-                               (delq #'+org-latex-replace-non-ascii-chars (plist-get info :filter-final-output)))
-                  info)
-                :latex-compiler "lualatex"))))
-#+end_src
-
-Then a font with unicode support must be used. JuliaMono is the obvious choice,
-and we can use it with the =fontspec= package. In future it may be nice to set
-this just as a fallback font (when it isn't a pain to do so).
-
-#+name: julia-mono-fontspec
-#+begin_src LaTeX
-\\usepackage{fontspec}
-\\newfontfamily\\JuliaMono{JuliaMono-Regular.ttf}[Path=/usr/share/fonts/truetype/, Extension=.ttf]
-\\newfontface\\JuliaMonoRegular{JuliaMono-Regular}
-\\setmonofont{JuliaMonoRegular}[Contextuals=Alternate, Scale=MatchLowercase]
-#+end_src
-
-Now all that remains is to hook this into the preamble generation.
-
-#+begin_src emacs-lisp :noweb no-export
-(setq org-latex-julia-mono-fontspec "
-<<julia-mono-fontspec>>
-")
-
-(add-to-list 'org-latex-feature-implementations '(julia-code :snippet org-latex-julia-mono-fontspec :order 0) t)
-(add-to-list 'org-latex-conditional-features '((and org-export-has-code-p "^[ \t]*#\\+begin_src julia\\|^[ \t]*#\\+BEGIN_SRC julia\\|src_julia") . julia-code) t)
-
-(add-to-list 'org-latex-feature-implementations '(.microtype-lualatex :eager t :when (microtype julia-code) :prevents microtype :order 0.1 :snippet "\\usepackage[activate={true,nocompatibility},final,tracking=true,factor=2000]{microtype}\n"))
-(add-to-list 'org-latex-feature-implementations '(.custom-font-no-mono :eager t :prevents custom-font :order 0 :snippet (org-latex-fontset :serif :sans)) t)
-#+end_src
 
 **** Emojis
 It would be nice to actually include emojis where used.
