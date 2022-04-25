@@ -2940,7 +2940,7 @@ It's nice to be able to link to music
 [[xkcd:1319]]
 **** Tweaking defaults
 #+begin_src emacs-lisp
-(setq org-directory "~/.org"                      ; let's put files here
+(setq org-directory (cl-find-if #'file-exists-p '("~/note/org/gtd" "~/Nextcloud/note/org/gtd"))                      ; let's put files here
       org-use-property-inheritance t              ; it's convenient to have properties inherited
       org-log-done 'time                          ; having the time a item is done sounds convenient
       org-list-allow-alphabetical t               ; have a. A. a) A) list bullets
@@ -3397,7 +3397,7 @@ set up org-capture.
 
   (setq doct-after-conversion-functions '(+doct-iconify-capture-templates))
 
-  (defvar +org-capture-recipies  "~/Desktop/TEC/Organisation/recipies.org")
+  (defvar +org-capture-recipies  "recipies.org")
 
   (defun set-org-capture-templates ()
     (setq org-capture-templates
@@ -3657,13 +3657,13 @@ no modeline.
 I'll just set this to be within =Organisation= folder for now, in the future it
 could be worth seeing if I could hook this up to a [[https://nextcloud.com/][Nextcloud]] instance.
 #+begin_src emacs-lisp :noweb-ref none :tangle yes
-(setq org-roam-directory "~/Desktop/TEC/Organisation/Roam/")
+(setq org-roam-directory (cl-find-if #'file-exists-p '("~/note/org/braindump/org" "~/Nextcloud/note/org/braindump/org")))
 #+end_src
 
 That said, if the directory doesn't exist we likely don't want to be using roam.
 Since we don't want to trigger errors (which will happen as soon as roam tries
 to initialise), let's not load roam.
-#+begin_src emacs-lisp :noweb-ref none :tangle (if (file-exists-p "~/Desktop/TEC/Organisation/Roam/") "no" "packages.el")
+#+begin_src emacs-lisp :noweb-ref none :tangle (if (file-exists-p (cl-find-if #'file-exists-p '("~/note/org/braindump/org" "~/Nextcloud/note/org/braindump/org"))) "no" "packages.el")
 (package! org-roam :disable t)
 #+end_src
 ***** Modeline file name
