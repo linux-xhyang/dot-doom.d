@@ -1457,11 +1457,6 @@ let's improve that memory.
     company-yasnippet))
 #+end_src
 We then configure the dictionary we're using in [[*Ispell][Ispell]].
-**** ESS
-~company-dabbrev-code~ is nice. Let's have it.
-#+begin_src emacs-lisp
-(set-company-backend! 'ess-r-mode '(company-R-args company-R-objects company-dabbrev-code :separate))
-#+end_src
 *** Projectile
 #+begin_quote
 From the =:core packages= module.
@@ -2089,34 +2084,6 @@ shadow)=, but I don't like that.
                     (doom-blend 'red 'orange (- size-index 1)))))
       (propertize (file-size-human-readable size) 'face (list :foreground color)))))
 #+end_src
-*** Centaur Tabs
-#+begin_quote
-From the =:ui tabs= module.
-#+end_quote
-
-
-We want to make the tabs a nice, comfy size (~36~), with icons. The modifier
-marker is nice, but the particular default Unicode one causes a lag spike, so
-let's just switch to an ~o~, which still looks decent but doesn't cause any
-issues.
-An 'active-bar' is nice, so let's have one of those. If we have it ~under~ needs us to
-turn on ~x-underline-at-decent~ though. For some reason this didn't seem to work
-inside the src_elisp{(after! ... )} block ¯\_(ツ)_/¯.
-Then let's change the font to a sans serif, but the default one doesn't fit too
-well somehow, so let's switch to 'P22 Underground Book'; it looks much nicer.
-#+begin_src emacs-lisp
-(after! centaur-tabs
-  (centaur-tabs-mode -1)
-  (setq centaur-tabs-height 36
-        centaur-tabs-set-icons t
-        centaur-tabs-modified-marker "o"
-        centaur-tabs-close-button "×"
-        centaur-tabs-set-bar 'above
-        centaur-tabs-gray-out-icons 'buffer)
-  (centaur-tabs-change-fonts "P22 Underground Book" 160))
-;; (setq x-underline-at-descent-line t)
-#+end_src
-
 *** All the icons
 #+begin_quote
 From the =:core packages= module.
@@ -2224,66 +2191,6 @@ tweaks. Namely:
 #+attr_html: :class invertible :alt Writeroom applied to an Org file
 [[https://tecosaur.com/lfs/emacs-config/screenshots/writeroom-and-org.png]]
 
-*** Treemacs
-#+begin_quote
-From the =:ui treemacs= module.
-#+end_quote
-
-Quite often there are superfluous files I'm not that interested in. There's no
-good reason for them to take up space. Let's add a mechanism to ignore them.
-#+begin_src emacs-lisp
-(after! treemacs
-  (defvar treemacs-file-ignore-extensions '()
-    "File extension which `treemacs-ignore-filter' will ensure are ignored")
-  (defvar treemacs-file-ignore-globs '()
-    "Globs which will are transformed to `treemacs-file-ignore-regexps' which `treemacs-ignore-filter' will ensure are ignored")
-  (defvar treemacs-file-ignore-regexps '()
-    "RegExps to be tested to ignore files, generated from `treeemacs-file-ignore-globs'")
-  (defun treemacs-file-ignore-generate-regexps ()
-    "Generate `treemacs-file-ignore-regexps' from `treemacs-file-ignore-globs'"
-    (setq treemacs-file-ignore-regexps (mapcar 'dired-glob-regexp treemacs-file-ignore-globs)))
-  (if (equal treemacs-file-ignore-globs '()) nil (treemacs-file-ignore-generate-regexps))
-  (defun treemacs-ignore-filter (file full-path)
-    "Ignore files specified by `treemacs-file-ignore-extensions', and `treemacs-file-ignore-regexps'"
-    (or (member (file-name-extension file) treemacs-file-ignore-extensions)
-        (let ((ignore-file nil))
-          (dolist (regexp treemacs-file-ignore-regexps ignore-file)
-            (setq ignore-file (or ignore-file (if (string-match-p regexp full-path) t nil)))))))
-  (add-to-list 'treemacs-ignored-file-predicates #'treemacs-ignore-filter))
-#+end_src
-
-Now, we just identify the files in question.
-#+begin_src emacs-lisp
-(setq treemacs-file-ignore-extensions
-      '(;; LaTeX
-        "aux"
-        "ptc"
-        "fdb_latexmk"
-        "fls"
-        "synctex.gz"
-        "toc"
-        ;; LaTeX - glossary
-        "glg"
-        "glo"
-        "gls"
-        "glsdefs"
-        "ist"
-        "acn"
-        "acr"
-        "alg"
-        ;; LaTeX - pgfplots
-        "mw"
-        ;; LaTeX - pdfx
-        "pdfa.xmpi"
-        ))
-(setq treemacs-file-ignore-globs
-      '(;; LaTeX
-        "*/_minted-*"
-        ;; AucTeX
-        "*/.auctex-auto"
-        "*/_region_.log"
-        "*/_region_.tex"))
-#+end_src
 *** Ligatures
 #+begin_src emacs-lisp
 (setq +ligatures-extras-in-modes '(org-mode))
@@ -4169,74 +4076,6 @@ It likely misses some edge cases, but should mostly work.
           (setq count (1+ count))))
       (message "Replaced %d occurances" count))))
 #+end_src
-**** Extra links
-***** xkcd
-Because xkcd is cool, let's make it as easy and fun as possible to insert them.
-Saving seconds adds up after all! (but only so much)
-
-[[xkcd:1205]]
-
-#+begin_src emacs-lisp
-(org-link-set-parameters "xkcd"
-                         :image-data-fun #'+org-xkcd-image-fn
-                         :follow #'+org-xkcd-open-fn
-                         :export #'+org-xkcd-export
-                         :complete #'+org-xkcd-complete)
-
-(defun +org-xkcd-open-fn (link)
-  (+org-xkcd-image-fn nil link nil))
-
-(defun +org-xkcd-image-fn (protocol link description)
-  "Get image data for xkcd num LINK"
-  (let* ((xkcd-info (+xkcd-fetch-info (string-to-number link)))
-         (img (plist-get xkcd-info :img))
-         (alt (plist-get xkcd-info :alt)))
-    (message alt)
-    (+org-image-file-data-fn protocol (xkcd-download img (string-to-number link)) description)))
-
-(defun +org-xkcd-export (num desc backend _com)
-  "Convert xkcd to html/LaTeX form"
-  (let* ((xkcd-info (+xkcd-fetch-info (string-to-number num)))
-         (img (plist-get xkcd-info :img))
-         (alt (plist-get xkcd-info :alt))
-         (title (plist-get xkcd-info :title))
-         (file (xkcd-download img (string-to-number num))))
-    (cond ((org-export-derived-backend-p backend 'html)
-           (format "<img class='invertible' src='%s' title=\"%s\" alt='%s'>" img (subst-char-in-string ?\" ?“ alt) title))
-          ((org-export-derived-backend-p backend 'latex)
-           (format "\\begin{figure}[!htb]
-  \\centering
-  \\includegraphics[scale=0.4]{%s}%s
-\\end{figure}" file (if (equal desc (format "xkcd:%s" num)) ""
-                      (format "\n  \\caption*{\\label{xkcd:%s} %s}"
-                              num
-                              (or desc
-                                  (format "\\textbf{%s} %s" title alt))))))
-          (t (format "https://xkcd.com/%s" num)))))
-
-(defun +org-xkcd-complete (&optional arg)
-  "Complete xkcd using `+xkcd-stored-info'"
-  (format "xkcd:%d" (+xkcd-select)))
-#+end_src
-
-***** Music
-
-***** YouTube
-The ~[[yt:...]]~ links preview nicely, but don't export nicely. Thankfully, we can
-fix that.
-#+begin_src emacs-lisp
-(org-link-set-parameters "yt" :export #'+org-export-yt)
-(defun +org-export-yt (path desc backend _com)
-  (cond ((org-export-derived-backend-p backend 'html)
-         (format "<iframe width='440' \
-height='335' \
-src='https://www.youtube.com/embed/%s' \
-frameborder='0' \
-allowfullscreen>%s</iframe>" path (or "" desc)))
-        ((org-export-derived-backend-p backend 'latex)
-         (format "\\href{https://youtu.be/%s}{%s}" path (or desc "youtube")))
-        (t (format "https://youtu.be/%s" path))))
-#+end_src
 **** Fix problematic hooks
 When one of the src_elisp{org-mode-hook} functions errors, it halts the hook
 execution. This is problematic, and there are two hooks in particular which
@@ -4254,8 +4093,6 @@ Org may be simple, but that doesn't mean there's no such thing as malformed Org.
 Thankfully, malformed Org is a much less annoying affair than malformed zipped
 XML (looks at DOCX/ODT...), particularly because there's a rather helpful little
 tool called ~org-lint~ bundled with Org that can tell you about your mistakes.
-
-[[xkcd:2109]]
 
 Flycheck doesn't currently support Org, and there's aren't any packages to do so
 ☹. However, in an issue on ~org-lint~ there is [[https://github.com/flycheck/flycheck/issues/1757#issuecomment-759546940][some code]] which apparently works.
@@ -4351,8 +4188,6 @@ much.
 
 Here I try to do two things: improve the styling of the various documents, via
 font changes etc, and also propagate colours from the current theme.
-
-[[xkcd:1882]]
 
 **** Font Display
 Mixed pitch is great. As is ~+org-pretty-mode~, let's use them.
@@ -7594,34 +7429,6 @@ Not added when either:
                (not (assoc :sync (caddr result))))
       (push '(:async) (caddr result)))
     result))
-#+end_src
-*** ESS
-We don't want ~R~ evaluation to hang the editor, hence
-#+begin_src emacs-lisp
-(setq ess-eval-visibly 'nowait)
-#+end_src
-
-Syntax highlighting is nice, so let's turn all of that on
-#+begin_src emacs-lisp
-(setq ess-R-font-lock-keywords
-      '((ess-R-fl-keyword:keywords . t)
-        (ess-R-fl-keyword:constants . t)
-        (ess-R-fl-keyword:modifiers . t)
-        (ess-R-fl-keyword:fun-defs . t)
-        (ess-R-fl-keyword:assign-ops . t)
-        (ess-R-fl-keyword:%op% . t)
-        (ess-fl-keyword:fun-calls . t)
-        (ess-fl-keyword:numbers . t)
-        (ess-fl-keyword:operators . t)
-        (ess-fl-keyword:delimiters . t)
-        (ess-fl-keyword:= . t)
-        (ess-R-fl-keyword:F&T . t)))
-#+end_src
-
-Lastly, in the event that I use =JAGS=, it would be nice to be able to use =jags= as
-the language identifier, not =ess-jags=.
-#+begin_src emacs-lisp
-(add-to-list '+org-babel-mode-alist '(jags . ess-jags))
 #+end_src
 ** LaTeX
 [[xkcd:1301]]
