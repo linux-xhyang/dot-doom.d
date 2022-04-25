@@ -34,3 +34,6 @@
 [submodule "lisp/xgtags"]
 	path = lisp/xgtags
 	url = https://github.com/linux-xhyang/xgtags
+[submodule "lisp/android-jdb"]
+	path = lisp/android-jdb
+	url = https://github.com/linux-xhyang/android-jdb.git

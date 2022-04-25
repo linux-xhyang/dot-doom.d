@@ -1599,6 +1599,17 @@ file uploading script (which I've renamed to ~upload~).
   (use-package! xgtags
                 :hook (prog-mode . xgtags-mode))
 #+end_src
+*** Android jdb
+
+#+begin_src emacs-lisp :tangle packages.el
+(package! android :recipe (:local-repo "lisp/android-jdb"))
+#+end_src
+#+begin_src emacs-lisp
+(after! cc-mode
+  (require 'android)
+  )
+#+end_src
+
 *** Etrace
 
 The /Emacs Lisp Profiler/ (ELP) does a nice job recording information, but it
