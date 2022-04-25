@@ -1196,17 +1196,18 @@ have the following.
 *** Cider
 #+begin_src emacs-lisp
 (after! cider
-(defun clerk-show ()
+  (defun clerk-show ()
     (interactive)
     (save-buffer)
     (let
         ((filename
-             (buffer-file-name)))
-        (when filename
-            (cider-interactive-eval
-                (concat "(nextjournal.clerk/show! \"" filename "\")")))))
-
-(global-set-key [f9] 'clerk-show)
+          (buffer-file-name)))
+      (when filename
+        (cider-interactive-eval
+         (concat "(nextjournal.clerk/show! \"" filename "\")")))))
+  (map! (:localleader
+         (:map (clojure-mode-map clojurescript-mode-map clojurec-mode-map)
+          "'"  #'clerk-show)))
   )
 #+end_src
 *** Very large files
@@ -1672,6 +1673,17 @@ From the =:core packages= module.
  '(org-mode)
  "<<" ">>"
  :actions '(insert))
+
+(define-key smartparens-mode-map (kbd "M-k") 'sp-kill-hybrid-sexp)
+(define-key smartparens-mode-map [remap kill-line] 'sp-kill-hybrid-sexp)
+(defadvice sp-kill-hybrid-sexp (before kill-line-cleanup-whitespace activate)
+  "cleanup whitespace on sp-kill-hybrid-sexp"
+  (if (bolp)
+      (delete-region (point) (progn (skip-chars-forward " \t") (point)))))
+
+(customize-set-variable 'sp-hybrid-kill-excessive-whitespace nil)
+(customize-set-variable 'sp-ignore-modes-list (quote (minibuffer-inactive-mode)))
+(customize-set-variable 'sp-successive-kill-preserve-whitespace 2)
 #+end_src
 
 ** Visuals
