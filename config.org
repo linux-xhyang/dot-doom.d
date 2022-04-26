@@ -1216,7 +1216,7 @@ The /very large files/ mode loads large files in chunks, allowing one to open
 ridiculously large files.
 #+begin_src emacs-lisp :tangle packages.el
 (package! vlf :recipe (:host github :repo "m00natic/vlfi" :files ("*.el"))
-  :pin "cc02f2533782d6b9b628cec7e2dcf25b2d05a27c" :disable t)
+  :pin "cc02f2533782d6b9b628cec7e2dcf25b2d05a27c")
 #+end_src
 
 To make VLF available without delaying startup, we'll just load it in quiet moments.
@@ -1524,16 +1524,17 @@ nearby (also means that if I change the 'main' dictionary I keep my addition).
 #+end_src
 *** Rime
 
-#+begin_src emacs-lisp :tangle packages.el
+#+begin_src emacs-lisp :tangle "packages.el"
 (package! rime :pin "e6a89e9fa9eabc32063bffb2eacfcece46f7a049")
 #+end_src
 
 #+begin_src emacs-lisp
 (use-package! rime
   :custom
-  (default-input-method "rime")
-  (rime-show-candidate 'posframe)
-  (rime-user-data-dir (file-truename "~/.doom.d/rime"))
+  (when (display-graphic-p)
+    (default-input-method "rime")
+    (rime-show-candidate 'posframe)
+    (rime-user-data-dir (file-truename "~/.doom.d/rime")))
   )
 
 #+end_src
