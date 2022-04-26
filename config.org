@@ -1193,6 +1193,17 @@ have the following.
       :extraArgs ["--gcc-toolchain=/usr"])))
   )
 #+end_src
+*** clipetty
+#+begin_src emacs-lisp :tangle packages.el
+(package! clipetty :recipe (:host github :repo "spudlyo/clipetty" :files ("*.el")))
+#+end_src
+
+#+begin_src emacs-lisp
+(after! clipetty
+  (global-clipetty-mode)
+  (setq-default clipetty-assume-nested-mux t)
+  )
+#+end_src
 *** Cider
 #+begin_src emacs-lisp
 (after! cider
@@ -1465,19 +1476,20 @@ From the =:core packages= module.
 Looking at documentation via =SPC h f= and =SPC h v= and looking at the source can
 add package src directories to projectile. This isn't desirable in my opinion.
 #+begin_src emacs-lisp
-(setq projectile-ignored-projects '("~/" "/tmp" "~/.emacs.d/.local/straight/repos/"))
-(setq projectile-git-command "git ls-files -zco --exclude-standard -x \".ccls-cache\"")
-(setq projectile-globally-ignored-directories
-   '(".idea" ".vscode" ".ensime_cache" ".eunit" ".git" ".hg" ".fslckout" "_FOSSIL_" ".bzr" "_darcs" ".tox" ".svn" ".stack-work" ".ccls-cache" ".cache" ".repo" ".clangd"))
-(setq projectile-project-root-files-bottom-up
-   '("compile_commands.json" ".git" ".projectile" ".hg" ".fslckout" "_FOSSIL_" ".bzr" "_darcs"))
-(setq projectile-project-root-files-top-down-recurring
-   '(".svn" "CVS" "Makefile" ".git" ".cquery" "compile_commands.json"))
-(setq projectile-require-project-root nil)
+(after! projectile
 
-(defun projectile-ignored-project-function (filepath)
-  "Return t if FILEPATH is within any of `projectile-ignored-projects'"
-  (or (mapcar (lambda (p) (s-starts-with-p p filepath)) projectile-ignored-projects)))
+  (setq-default projectile-git-command "git ls-files -zco --exclude-standard -x \".ccls-cache\"")
+  (setq-default projectile-globally-ignored-directories
+                '(".idea" ".vscode" ".ensime_cache" ".eunit" ".git" ".hg" ".fslckout" "_FOSSIL_" ".bzr" "_darcs" ".tox" ".svn" ".stack-work" ".ccls-cache" ".cache" ".repo" ".clangd"))
+  (setq-default projectile-project-root-files-bottom-up
+                '("compile_commands.json" ".git" ".projectile" ".hg" ".fslckout" "_FOSSIL_" ".bzr" "_darcs"))
+  (setq-default projectile-project-root-files-top-down-recurring
+                '(".svn" "CVS" "Makefile" ".git" ".cquery" "compile_commands.json"))
+  (setq-default projectile-require-project-root nil)
+  (defun projectile-ignored-project-function (filepath)
+    "Return t if FILEPATH is within any of `projectile-ignored-projects'"
+    (or (mapcar (lambda (p) (s-starts-with-p p filepath)) projectile-ignored-projects)))
+  )
 #+end_src
 
 *** Ispell
@@ -2848,7 +2860,7 @@ It's nice to be able to link to music
 [[xkcd:1319]]
 **** Tweaking defaults
 #+begin_src emacs-lisp
-(setq org-directory (cl-find-if #'file-exists-p '("~/note/org/gtd" "~/Nextcloud/note/org/gtd"))                      ; let's put files here
+(setq org-directory (cl-find-if #'file-exists-p '("~/note/org/gtd" "~/Nextcloud/note/org/gtd" "~/.org"))                      ; let's put files here
       org-use-property-inheritance t              ; it's convenient to have properties inherited
       org-log-done 'time                          ; having the time a item is done sounds convenient
       org-list-allow-alphabetical t               ; have a. A. a) A) list bullets
@@ -3565,13 +3577,13 @@ no modeline.
 I'll just set this to be within =Organisation= folder for now, in the future it
 could be worth seeing if I could hook this up to a [[https://nextcloud.com/][Nextcloud]] instance.
 #+begin_src emacs-lisp :noweb-ref none :tangle yes
-(setq org-roam-directory (cl-find-if #'file-exists-p '("~/note/org/braindump/org" "~/Nextcloud/note/org/braindump/org")))
+(setq org-roam-directory (cl-find-if #'file-exists-p '("~/note/org/braindump/org" "~/Nextcloud/note/org/braindump/org" "~/.org")))
 #+end_src
 
 That said, if the directory doesn't exist we likely don't want to be using roam.
 Since we don't want to trigger errors (which will happen as soon as roam tries
 to initialise), let's not load roam.
-#+begin_src emacs-lisp :noweb-ref none :tangle (if (file-exists-p (cl-find-if #'file-exists-p '("~/note/org/braindump/org" "~/Nextcloud/note/org/braindump/org"))) "no" "packages.el")
+#+begin_src emacs-lisp :noweb-ref none :tangle (if (file-exists-p (cl-find-if #'file-exists-p '("~/note/org/braindump/org" "~/Nextcloud/note/org/braindump/org" "~/.org"))) "no" "packages.el")
 (package! org-roam :disable t)
 #+end_src
 ***** Modeline file name
@@ -4491,7 +4503,7 @@ let's make it transparent.
 We can either render from a ~dvi~ or ~pdf~ file, so let's benchmark ~latex~ and
 ~pdflatex~.
 | ~latex~ time | ~pdflatex~ time |
-|------------+---------------|
+|--------------+-----------------|
 | 135 \pm 2 ms | 215 \pm 3 ms    |
 
 On the rendering side, there are two ~.dvi~-to-image converters which I am
@@ -4501,12 +4513,12 @@ size and prefer a vector graphic.
 
 Using the above latex expression and benchmarking lead to the following results:
 | ~dvipng~ time | ~dvisvgm~ time | ~pdf2svg~ time |
-|-------------+--------------+--------------|
+|---------------+----------------+----------------|
 | 89 \pm 2 ms   | 178 \pm 2 ms   | 12 \pm 2 ms    |
 
 Now let's combine this to see what's best
-| Tool chain         | Total time | Resultant file size |
-|--------------------+------------+---------------------|
+| Tool chain             | Total time   | Resultant file size |
+|------------------------+--------------+---------------------|
 | ~latex~ + ~dvipng~     | 226 \pm 2 ms | 7 KiB               |
 | ~latex~ + ~dvisvgm~    | 392 \pm 4 ms | 8 KiB               |
 | ~pdflatex~ + ~pdf2svg~ | 230 \pm 2 ms | 16 KiB              |
@@ -6893,51 +6905,51 @@ Now, there are some symbols that aren't included in =inputenc=, but we should be
 able to handle anyway. For them we define a table of LaTeX translations
 
 #+name: latex-non-ascii-char-substitutions
-| Character | LaTeX       |
-|-----------+-------------|
-| ɑ         | \(\alpha\)       |
+| Character | LaTeX           |
+|-----------+-----------------|
+| ɑ         | \(\alpha\)      |
 | β         | \(\beta\)       |
-| γ         | \(\gamma\)       |
-| δ         | \(\delta\)       |
-| ε         | \(\epsilon\)       |
-| ϵ         | \(\varepsilon\)       |
+| γ         | \(\gamma\)      |
+| δ         | \(\delta\)      |
+| ε         | \(\epsilon\)    |
+| ϵ         | \(\varepsilon\) |
 | ζ         | \(\zeta\)       |
-| η         | \(\eta\)       |
-| θ         | \(\theta\)       |
-| ϑ         | \(\vartheta\)       |
+| η         | \(\eta\)        |
+| θ         | \(\theta\)      |
+| ϑ         | \(\vartheta\)   |
 | ι         | \(\iota\)       |
-| κ         | \(\kappa\)       |
-| λ         | \(\lambda\)       |
-| μ         | \(\mu\)       |
-| ν         | \(\nu\)       |
-| ξ         | \(\xi\)       |
-| π         | \(\pi\)       |
-| ϖ         | \(\varpi\)       |
-| ρ         | \(\rho\)       |
-| ϱ         | \(\varrho\) |
-| σ         | \(\sigma\)       |
-| ς         | \(\varsigma\)       |
-| τ         | \(\tau\)       |
-| υ         | \(\upsilon\)       |
-| ϕ         | \(\phi\)       |
-| φ         | \(\varphi\)       |
-| ψ         | \(\psi\)       |
-| ω         | \(\omega\)       |
-| Γ         | \(\Gamma\)       |
-| Δ         | \(\Delta\)       |
-| Θ         | \(\Theta\)       |
-| Λ         | \(\Lambda\)       |
-| Ξ         | \(\Xi\)       |
-| Π         | \(\Pi\)       |
-| Σ         | \(\Sigma\)       |
-| Υ         | \(\Upsilon\)       |
-| Φ         | \(\Phi\)       |
-| Ψ         | \(\Psi\)       |
-| Ω         | \(\Omega\)       |
-| א         | \(\aleph\)       |
+| κ         | \(\kappa\)      |
+| λ         | \(\lambda\)     |
+| μ         | \(\mu\)         |
+| ν         | \(\nu\)         |
+| ξ         | \(\xi\)         |
+| π         | \(\pi\)         |
+| ϖ         | \(\varpi\)      |
+| ρ         | \(\rho\)        |
+| ϱ         | \(\varrho\)     |
+| σ         | \(\sigma\)      |
+| ς         | \(\varsigma\)   |
+| τ         | \(\tau\)        |
+| υ         | \(\upsilon\)    |
+| ϕ         | \(\phi\)        |
+| φ         | \(\varphi\)     |
+| ψ         | \(\psi\)        |
+| ω         | \(\omega\)      |
+| Γ         | \(\Gamma\)      |
+| Δ         | \(\Delta\)      |
+| Θ         | \(\Theta\)      |
+| Λ         | \(\Lambda\)     |
+| Ξ         | \(\Xi\)         |
+| Π         | \(\Pi\)         |
+| Σ         | \(\Sigma\)      |
+| Υ         | \(\Upsilon\)    |
+| Φ         | \(\Phi\)        |
+| Ψ         | \(\Psi\)        |
+| Ω         | \(\Omega\)      |
+| א         | \(\aleph\)      |
 | ב         | \(\beth\)       |
-| ד         | \(\daleth\) |
-| ג         | \(\gimel\)       |
+| ד         | \(\daleth\)     |
+| ג         | \(\gimel\)      |
 
 #+name: gen-latex-non-ascii-char-substitutions
 #+begin_src emacs-lisp :noweb-ref none :var latex-non-ascii-char-substitutions=latex-non-ascii-char-substitutions
