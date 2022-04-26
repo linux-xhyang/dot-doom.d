@@ -1173,7 +1173,7 @@ have the following.
    ccls-args
     (list
      (concat "--log-file="
-             (expand-file-name "~/ccls.log")))
+             (expand-file-name "~/.emacs.d/.cache/ccls.log")))
    ccls-initialization-options
    '(:completion (:detailedLabel t)
      :index (:initialReparseForDependency :json-false :comments 2 :threads 2)
