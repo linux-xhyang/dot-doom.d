@@ -201,8 +201,6 @@ super-tight iteration loop.
 
 ** Editor comparison
 
-[[xkcd:378]]
-
 Over the years I have tried out (spent at least a year using as my primary
 editor) the following applications
 - Python IDLE
@@ -225,43 +223,6 @@ I have attempted to quantify aspects of my impressions of them below.
 #+attr_html: :class invertible :alt Radar chart comparing my thoughts on a few editors.
 #+attr_latex: :options inkscapelatex=false
 [[file:misc/editor-comparison.svg]]
-
-** Notes for the unwary adventurer
-If you like the look of this, that's marvellous, and I'm really happy that I've
-made something which you may find interesting, however:
-#+begin_warning
-This config is /insidious/. Copying the whole thing blindly can easily lead to
-undesired effects. I recommend copying chunks instead.
-#+end_warning
-
-If you are so bold as to wish to steal bits of my config (or if I upgrade and
-wonder why things aren't working), here's a list of sections which rely on
-external setup (i.e. outside of this config).
-
-+ dictionary :: I've downloaded a custom [[http://app.aspell.com/create][SCOWL]] dictionary, which I use in [[*Ispell][ispell]].
-  If this causes issues, just delete the src_elisp{(setq ispell-dictionary ...)}
-  bit.
-
-Oh, did I mention that I started this config when I didn't know any =elisp=, and
-this whole thing is a hack job? If you can suggest any improvements, please do
-so, no matter how much criticism you include I'll appreciate it :)
-
-*** Extra Requirements
-The lovely ~doom doctor~ is good at diagnosing most missing things, but here are a
-few extras.
-+ A [[https://www.tug.org/texlive/][LaTeX Compiler]] is required for the mathematics rendering performed in [[#org][Org]],
-  and by [[*CalcTeX][CalcTeX]].
-+ I use the [[https://overpassfont.org/][Overpass]] font as a go-to sans serif.
-  It's used as my ~doom-variable-pitch-font~ and in the graph generated
-  by [[*Roam][Roam]].
-  I have chosen it because it possesses a few characteristics I consider
-  desirable, namely:
-  - A clean, and legible style. Highway-style fonts tend to be designed to be
-    clear at a glance, and work well with a thicker weight, and this is inspired
-    by /Highway Gothic/.
-  - It's slightly quirky. Look at the diagonal cut on stems for example.
-    Helvetica is a masterful design, but I like a bit more pizzazz now and then.
-+ A few LSP servers. Take a look at [[file:init.el][init.el]] to see which modules have the ~+lsp~ flag.
 
 ** Rudimentary configuration
 Make this file run (slightly) faster with lexical binding (see [[https://nullprogram.com/blog/2016/12/22/][this blog post]]
@@ -543,7 +504,7 @@ vterm                        ; the best terminal emulation in Emacs
 #+name: doom-checkers
 #+begin_src emacs-lisp
 syntax                       ; tasing you for every semicolon you forget
-(:if (executable-find "aspell") spell) ; tasing you for misspelling mispelling
+;;(:if (executable-find "aspell") spell) ; tasing you for misspelling mispelling
 grammar                      ; tasing grammar mistake every you make
 #+end_src
 
@@ -1456,18 +1417,15 @@ let's improve that memory.
 (setq-default prescient-history-length 1000)
 #+end_src
 **** Plain Text
-~Ispell~ is nice, let's have it in ~text~, ~markdown~, and ~GFM~.
 #+begin_src emacs-lisp
 (set-company-backend!
   '(text-mode
     markdown-mode
     gfm-mode)
   '(:seperate
-    company-ispell
     company-files
     company-yasnippet))
 #+end_src
-We then configure the dictionary we're using in [[*Ispell][Ispell]].
 *** Projectile
 #+begin_quote
 From the =:core packages= module.
@@ -1490,49 +1448,6 @@ add package src directories to projectile. This isn't desirable in my opinion.
     "Return t if FILEPATH is within any of `projectile-ignored-projects'"
     (or (mapcar (lambda (p) (s-starts-with-p p filepath)) projectile-ignored-projects)))
   )
-#+end_src
-
-*** Ispell
-**** Downloading dictionaries
-Let's get a nice big dictionary from [[http://app.aspell.net/create][SCOWL Custom List/Dictionary Creator]] with
-the following configuration
-- size :: 80 (huge)
-- spellings :: British(-ise) and Australian
-- spelling variants level :: 0
-- diacritics :: keep
-- extra lists :: hacker, roman numerals
-
-***** Hunspell
-#+begin_src shell :tangle (if (file-exists-p "/usr/share/myspell/en-custom.dic") "no" "setup.sh")
-cd /tmp
-curl -o "hunspell-en-custom.zip" 'http://app.aspell.net/create?max_size=80&spelling=GBs&spelling=AU&max_variant=0&diacritic=keep&special=hacker&special=roman-numerals&encoding=utf-8&format=inline&download=hunspell'
-unzip "hunspell-en-custom.zip"
-
-sudo chown root:root en-custom.*
-sudo mv en-custom.{aff,dic} /usr/share/myspell/
-#+end_src
-***** Aspell
-#+begin_src shell :tangle (if (file-expand-wildcards "/usr/lib64/aspell*/en-custom.multi") "no" "setup.sh")
-cd /tmp
-curl -o "aspell6-en-custom.tar.bz2" 'http://app.aspell.net/create?max_size=80&spelling=GBs&spelling=AU&max_variant=0&diacritic=keep&special=hacker&special=roman-numerals&encoding=utf-8&format=inline&download=aspell'
-tar -xjf "aspell6-en-custom.tar.bz2"
-
-cd aspell6-en-custom
-./configure && make && sudo make install
-#+end_src
-**** Configuration
-#+begin_src emacs-lisp
-(setq ispell-dictionary "en-custom")
-#+end_src
-Oh, and by the way, if ~company-ispell-dictionary~ is ~nil~, then
-~ispell-complete-word-dict~ is used instead, which once again when ~nil~ is
-~ispell-alternate-dictionary~, which at the moment maps to a plaintext version of
-the above.
-
-It seems reasonable to want to keep an eye on my personal dict, let's have it
-nearby (also means that if I change the 'main' dictionary I keep my addition).
-#+begin_src emacs-lisp
-(setq ispell-personal-dictionary (expand-file-name ".ispell_personal" doom-private-dir))
 #+end_src
 *** Rime
 
@@ -2584,7 +2499,7 @@ figure.png╶─╧─▶ PROJECT.ORG ▶───╴filters╶───╧─�
 :end:
 
 Finally, because this section is fairly expensive to initialise, we'll wrap it
-in an src_elisp{(after! ...)} block.
+in an src_elisp{(after! ..  .)} block.
 #+begin_src emacs-lisp :noweb no-export :tangle yes :noweb-ref nil
 (after! org
   <<org-conf>>
@@ -2842,22 +2757,7 @@ post-processing the =latexdiff= result.
   (add-to-list 'orgdiff-latexdiff-postprocess-hooks #'+orgdiff-nicer-change-colours))
 #+end_src
 
-***** Org music
-It's nice to be able to link to music
-#+begin_src emacs-lisp
-(package! org-music :recipe (:local-repo "lisp/org-music"))
-#+end_src
-#+begin_src emacs-lisp :tangle yes
-(use-package! org-music
-  :after org
-  :config
-  (setq org-music-mpris-player "Lollypop"
-        org-music-track-search-method 'beets
-        org-music-beets-db "~/Music/library.db"))
-#+end_src
-
 *** Behaviour
-[[xkcd:1319]]
 **** Tweaking defaults
 #+begin_src emacs-lisp
 (setq org-directory (cl-find-if #'file-exists-p '("~/note/org/gtd" "~/Nextcloud/note/org/gtd" "~/.org"))                      ; let's put files here
@@ -3120,11 +3020,6 @@ want to edit them afterwards though, so let's make that happen by default.
 
 At some point in the future it could be good to investigate [[https://scripter.co/splitting-an-org-block-into-two/][splitting org blocks]].
 Likewise [[https://archive.casouri.cat/note/2020/insert-math-symbol-in-emacs/][this]] looks good for symbols.
-***** Spellcheck
-My spelling is atrocious, so let's get flycheck going.
-#+begin_src emacs-lisp
-(add-hook 'org-mode-hook 'turn-on-flyspell)
-#+end_src
 ***** LSP support in ~src~ blocks
 Now, by default, LSPs don't really function at all in ~src~ blocks.
 #+begin_src emacs-lisp
@@ -4503,7 +4398,7 @@ let's make it transparent.
 We can either render from a ~dvi~ or ~pdf~ file, so let's benchmark ~latex~ and
 ~pdflatex~.
 | ~latex~ time | ~pdflatex~ time |
-|--------------+-----------------|
+|------------+---------------|
 | 135 \pm 2 ms | 215 \pm 3 ms    |
 
 On the rendering side, there are two ~.dvi~-to-image converters which I am
@@ -4513,12 +4408,12 @@ size and prefer a vector graphic.
 
 Using the above latex expression and benchmarking lead to the following results:
 | ~dvipng~ time | ~dvisvgm~ time | ~pdf2svg~ time |
-|---------------+----------------+----------------|
+|-------------+--------------+--------------|
 | 89 \pm 2 ms   | 178 \pm 2 ms   | 12 \pm 2 ms    |
 
 Now let's combine this to see what's best
-| Tool chain             | Total time   | Resultant file size |
-|------------------------+--------------+---------------------|
+| Tool chain         | Total time | Resultant file size |
+|--------------------+------------+---------------------|
 | ~latex~ + ~dvipng~     | 226 \pm 2 ms | 7 KiB               |
 | ~latex~ + ~dvisvgm~    | 392 \pm 4 ms | 8 KiB               |
 | ~pdflatex~ + ~pdf2svg~ | 230 \pm 2 ms | 16 KiB              |
@@ -5558,7 +5453,13 @@ simply superior combination.
 
 #+begin_src emacs-lisp
 ;; org-latex-compilers = ("pdflatex" "xelatex" "lualatex"), which are the possible values for %latex
-(setq org-latex-pdf-process '("LC_ALL=en_US.UTF-8 latexmk -f -pdf -%latex -shell-escape -interaction=nonstopmode -output-directory=%o %f"))
+(setq org-latex-pdf-process
+	  '("xelatex -interaction nonstopmode -output-directory %o %f"
+	    ;; "biber %b" "xelatex -interaction nonstopmode -output-directory %o %f"
+	    "bibtex %b"
+	    "xelatex -interaction nonstopmode -output-directory %o %f"
+	    "xelatex -interaction nonstopmode -output-directory %o %f"))
+;;(setq org-latex-pdf-process '("LC_ALL=en_US.UTF-8 latexmk -f -pdf -%latex -shell-escape -interaction=nonstopmode -output-directory=%o %f"))
 #+end_src
 
 While ~org-latex-pdf-process~ does support a function, and we could use that
@@ -5690,26 +5591,6 @@ The =hyperref= setup needs to be handled separately however.
 #+end_src
 
 **** A cleverer preamble
-***** Use case
-We often want particular snippets of LaTeX in our documents preambles.
-It's a pain to have to work out / remember them every time.
-For example, I almost always want to include the snippet below.
-
-#+name: org-latex-embed-files-preamble
-#+begin_src LaTeX
-\\usepackage[main,include]{embedall}
-\\IfFileExists{./\\jobname.org}{\\embedfile[desc=The original file]{\\jobname.org}}{}
-#+end_src
-
-We could have every package we could possibly need in every one of
-~org-latex-classes~, but that's /horribly/ inefficient and I don't want to think
-about maintaining that.
-
-Instead we can provide some granularity by splitting up the features we want,
-and then take the experience to a whole new level by implementing a system to
-automatically detect which features are desired and generating a preamble that
-provides these features.
-
 ***** Conditional Content
 
 Let's consider content we want in particular situations.
@@ -6171,169 +6052,6 @@ There are also some obsolete entries in the default value, specifically
         ("" "xcolor" nil) ; Generally useful
         ("" "hyperref" nil)))
 #+end_src
-**** Font collections
-
-Using the lovely conditional preamble, I'll define a number of font collections
-that can be used for LaTeX exports. Who knows, maybe I'll use it with other
-export formats too at some point.
-
-To start with I'll create a default state variable and register =fontset= as part
-of =#+options=.
-
-#+begin_src emacs-lisp
-(defvar org-latex-default-fontset 'alegreya
-  "Fontset from `org-latex-fontsets' to use by default.
-As cm (computer modern) is TeX's default, that causes nothing
-to be added to the document.
-
-If \"nil\" no custom fonts will ever be used.")
-
-(eval '(cl-pushnew '(:latex-font-set nil "fontset" org-latex-default-fontset)
-                   (org-export-backend-options (org-export-get-backend 'latex))))
-#+end_src
-
-Then a function is needed to generate a LaTeX snippet which applies the fontset. It
-would be nice if this could be done for individual styles and use different
-styles as the main document font. If the individual typefaces for a fontset are
-defined individually as
-src_elisp{:serif}, src_elisp{:sans}, src_elisp{:mono}, and src_elisp{:maths}.
-I can use those to generate LaTeX for subsets of the full fontset. Then, if I
-don't let any fontset names have =-= in them, I can use =-sans= and =-mono= as
-suffixes that specify the document font to use.
-
-#+begin_src emacs-lisp
-(defun org-latex-fontset-entry ()
-  "Get the fontset spec of the current file.
-Has format \"name\" or \"name-style\" where 'name' is one of
-the cars in `org-latex-fontsets'."
-  (let ((fontset-spec
-         (symbol-name
-          (or (car (delq nil
-                         (mapcar
-                          (lambda (opt-line)
-                            (plist-get (org-export--parse-option-keyword opt-line 'latex)
-                                       :latex-font-set))
-                          (cdar (org-collect-keywords '("OPTIONS"))))))
-              org-latex-default-fontset))))
-    (cons (intern (car (split-string fontset-spec "-")))
-          (when (cadr (split-string fontset-spec "-"))
-            (intern (concat ":" (cadr (split-string fontset-spec "-"))))))))
-
-(defun org-latex-fontset (&rest desired-styles)
-  "Generate a LaTeX preamble snippet which applies the current fontset for DESIRED-STYLES."
-  (let* ((fontset-spec (org-latex-fontset-entry))
-         (fontset (alist-get (car fontset-spec) org-latex-fontsets)))
-    (if fontset
-        (concat
-         (mapconcat
-          (lambda (style)
-            (when (plist-get fontset style)
-              (concat (plist-get fontset style) "\n")))
-          desired-styles
-          "")
-         (when (memq (cdr fontset-spec) desired-styles)
-           (pcase (cdr fontset-spec)
-             (:serif "\\renewcommand{\\familydefault}{\\rmdefault}\n")
-             (:sans "\\renewcommand{\\familydefault}{\\sfdefault}\n")
-             (:mono "\\renewcommand{\\familydefault}{\\ttdefault}\n"))))
-      (error "Font-set %s is not provided in org-latex-fontsets" (car fontset-spec)))))
-#+end_src
-
-Now that all the functionality has been implemented, we should hook it into our
-preamble generation.
-
-#+begin_src emacs-lisp
-(add-to-list 'org-latex-conditional-features '(org-latex-default-fontset . custom-font) t)
-(add-to-list 'org-latex-feature-implementations '(custom-font :snippet (org-latex-fontset :serif :sans :mono) :order 0) t)
-(add-to-list 'org-latex-feature-implementations '(.custom-maths-font :eager t :when (custom-font maths) :snippet (org-latex-fontset :maths) :order 0.3) t)
-#+end_src
-
-Finally, we just need to add some fonts.
-
-#+begin_src emacs-lisp
-(defvar org-latex-fontsets
-  '((cm nil) ; computer modern
-    (## nil) ; no font set
-    (alegreya
-     :serif "\\usepackage[osf]{Alegreya}"
-     :sans "\\usepackage{AlegreyaSans}"
-     :mono "\\usepackage[scale=0.88]{sourcecodepro}"
-     :maths "\\usepackage[varbb]{newpxmath}")
-    (biolinum
-     :serif "\\usepackage[osf]{libertineRoman}"
-     :sans "\\usepackage[sfdefault,osf]{biolinum}"
-     :mono "\\usepackage[scale=0.88]{sourcecodepro}"
-     :maths "\\usepackage[libertine,varvw]{newtxmath}")
-    (fira
-     :sans "\\usepackage[sfdefault,scale=0.85]{FiraSans}"
-     :mono "\\usepackage[scale=0.80]{FiraMono}"
-     :maths "\\usepackage{newtxsf} % change to firamath in future?")
-    (kp
-     :serif "\\usepackage{kpfonts}")
-    (newpx
-     :serif "\\usepackage{newpxtext}"
-     :sans "\\usepackage{gillius}"
-     :mono "\\usepackage[scale=0.9]{sourcecodepro}"
-     :maths "\\usepackage[varbb]{newpxmath}")
-    (noto
-     :serif "\\usepackage[osf]{noto-serif}"
-     :sans "\\usepackage[osf]{noto-sans}"
-     :mono "\\usepackage[scale=0.96]{noto-mono}"
-     :maths "\\usepackage{notomath}")
-    (plex
-     :serif "\\usepackage{plex-serif}"
-     :sans "\\usepackage{plex-sans}"
-     :mono "\\usepackage[scale=0.95]{plex-mono}"
-     :maths "\\usepackage{newtxmath}") ; may be plex-based in future
-    (source
-     :serif "\\usepackage[osf,semibold]{sourceserifpro}"
-     :sans "\\usepackage[osf,semibold]{sourcesanspro}"
-     :mono "\\usepackage[scale=0.92]{sourcecodepro}"
-     :maths "\\usepackage{newtxmath}") ; may be sourceserifpro-based in future
-    (times
-     :serif "\\usepackage{newtxtext}"
-     :maths "\\usepackage{newtxmath}"))
-  "Alist of fontset specifications.
-Each car is the name of the fontset (which cannot include \"-\").
-
-Each cdr is a plist with (optional) keys :serif, :sans, :mono, and :maths.
-A key's value is a LaTeX snippet which loads such a font.")
-#+end_src
-
-When we're using Alegreya we can apply a lovely little tweak to =tabular= which
-(locally) changes the figures used to lining fixed-width.
-
-#+begin_src emacs-lisp
-(add-to-list 'org-latex-conditional-features '((string= (car (org-latex-fontset-entry)) "alegreya") . alegreya-typeface))
-(add-to-list 'org-latex-feature-implementations '(alegreya-typeface) t)
-(add-to-list 'org-latex-feature-implementations'(.alegreya-tabular-figures :eager t :when (alegreya-typeface table) :order 0.5 :snippet "
-\\makeatletter
-% tabular lining figures in tables
-\\renewcommand{\\tabular}{\\AlegreyaTLF\\let\\@halignto\\@empty\\@tabular}
-\\makeatother\n") t)
-#+end_src
-
-Due to the Alegreya's metrics, the =\LaTeX= symbol doesn't quite look right. We
-can correct for this by redefining it with subtlety shifted kerning.
-
-#+begin_src emacs-lisp
-(add-to-list 'org-latex-conditional-features '("LaTeX" . latex-symbol))
-(add-to-list 'org-latex-feature-implementations '(latex-symbol :when alegreya-typeface :order 0.5 :snippet "
-\\makeatletter
-% Kerning around the A needs adjusting
-\\DeclareRobustCommand{\\LaTeX}{L\\kern-.24em%
-        {\\sbox\\z@ T%
-         \\vbox to\\ht\\z@{\\hbox{\\check@mathfonts
-                              \\fontsize\\sf@size\\z@
-                              \\math@fontsfalse\\selectfont
-                              A}%
-                        \\vss}%
-        }%
-        \\kern-.10em%
-        \\TeX}
-\\makeatother\n") t)
-#+end_src
-
 **** Cover page
 
 To make a nice cover page, a simple method that comes to mind is just redefining
@@ -6709,265 +6427,6 @@ Treating the verbatim (no syntax highlighting) result as a baseline; this
 rudimentary test suggest that =engrave-faces= is around eight times faster than
 =pygments=, and takes three times as long as no syntax highlighting (verbatim).
 
-**** Emojis
-It would be nice to actually include emojis where used.
-Thanks to =emojify=, we have a folder of emoji images just sitting and waiting to
-be used 🙂.
-
-First up, we want to detect when emojis are actually present. We can try
-checking the unicode ranges with a collection of =[?-?]= regex groups, but Emojis
-are actually spread around a fair bit and so this isn't very straightforward.
-Instead I can iterate thorough non-ASCII characters and check if any have the
-text property =emojified=.
-
-#+begin_src emacs-lisp
-(defun emojify-emoji-in-buffer-p ()
-  "Determine if any emojis are present in the current buffer, using `emojify-mode'."
-  (unless emojify-mode
-    (emojify-mode 1)
-    (emojify-display-emojis-in-region (point-min) (point-max)))
-  (let (emoji-found end)
-    (save-excursion
-      (goto-char (point-min))
-      (while (not (or emoji-found end))
-        (if-let ((pos (re-search-forward "[^[:ascii:]]" nil t)))
-            (when (get-text-property (1- pos) 'emojified)
-              (setq emoji-found t))
-          (setq end t))))
-    emoji-found))
-#+end_src
-
-Once we know that there are emojis present we can add a bit of preamble to the
-buffer to make insertion easier.
-
-#+begin_src emacs-lisp
-(defun org-latex-emoji-setup ()
-  (format "\\newcommand\\emoji[1]{\\raisebox{-0.3ex}{\\includegraphics[height=1.8ex]{%s/#1}}}" (emojify-image-dir)))
-
-(add-to-list 'org-latex-conditional-features '((emojify-emoji-in-buffer-p) . emoji) t)
-(add-to-list 'org-latex-feature-implementations '(emoji :requires image :snippet (org-latex-emoji-setup) :order 3 ))
-#+end_src
-
-Once again making use of =emojify=, we can generate LaTeX commands for our emojis
-fairly easily.
-
-#+begin_src emacs-lisp
-(defun emojify-latexify-emoji-in-buffer ()
-  (unless emojify-mode
-    (emojify-mode 1)
-    (emojify-display-emojis-in-region (point-min) (point-max)))
-  (let (end)
-    (save-excursion
-      (goto-char (point-min))
-      (while (not end)
-        (if-let ((pos (re-search-forward "[^[:ascii:]]\\{1,2\\}" nil t)))
-            (when-let ((char (get-text-property (1- pos) 'emojify-text))
-                       (emoji (emojify-get-emoji char)))
-              (replace-match (format "\\\\emoji{%s}" (file-name-sans-extension (ht-get emoji "image")))))
-          (setq end t))))))
-#+end_src
-
-Now we just need to hook this handy function into Org's export.
-We can't use standard string-replacement as we rely on the buffer modifications
-enacted by src_elisp{(emojify-mode)}.
-
-As I have not yet implemented a nice way of sharing feature detection
-information outside of src_elisp{(org-latex-generate-features-preamble)}, we'll
-use the same check before attempting to LaTeXify emojis and hope that nothing
-strange happens.
-
-#+begin_src emacs-lisp
-(defun +org-latex-convert-emojis (text backend _info)
-  (when (org-export-derived-backend-p backend 'latex)
-    (with-temp-buffer
-      (insert text)
-      (when (emojify-emoji-in-buffer-p)
-        (emojify-latexify-emoji-in-buffer)
-        (buffer-string)))))
-
-(add-to-list 'org-export-filter-final-output-functions #'+org-latex-convert-emojis)
-#+end_src
-
-This works fairly nicely, there's just one little QOL upgrade that we can
-perform. =emojify= downloads the ~72x72~ versions of Twemoji, however SVG versions
-are also produced. We could use ~inkscape~ to convert those to PDFs, which would
-likely be best for including.
-
-First, it's worth checking whether =.pdf= graphics files will be prioritised over
-=.png= files. If so, that would be ideal as no extra effort is required past
-fetching and converting the files.
-
-#+begin_src shell :tangle no :exports both :results output verbatim :wrap example
-texdef -t pdflatex -p graphicx Gin@extensions
-#+end_src
-
-#+RESULTS:
-#+begin_example
-\Gin@extensions:
-macro:->.pdf,.png,.jpg,.mps,.jpeg,.jbig2,.jb2,.PDF,.PNG,.JPG,.JPEG,.JBIG2,.JB2,.eps
-#+end_example
-
-Fantastic! We can see that =.pdf= actually comes first in the priority list. So
-now we just need to fetch and convert those SVGs --- ideally with a handy
-command to do so for us.
-
-#+begin_src emacs-lisp
-(defun org-latex-emoji-install-vector-graphics ()
-  "Dowload, convert, and install vector emojis for use with LaTeX."
-  (interactive)
-  (let ((dir (org-latex-emoji-install-vector-graphics--download)))
-    (org-latex-emoji-install-vector-graphics--convert dir)
-    (org-latex-emoji-install-vector-graphics--install dir))
-  (message "Vector emojis installed."))
-
-(defun org-latex-emoji-install-vector-graphics--download ()
-  (message "Locating latest emojis...")
-  (let* ((twemoji-url (substring (shell-command-to-string "echo \"https://github.com$(curl -sL https://github.com/twitter/twemoji/releases/latest | grep '.zip\"' | cut -d '\"' -f 2)\"") 0 -1))
-         (twemoji-version (replace-regexp-in-string "^.*tags/v\\(.*\\)\\.zip" "\\1" twemoji-url))
-         (twemoji-dest-folder (make-temp-file "twemoji-" t)))
-    (message "Downloading Twemoji v%s" twemoji-version)
-    (let ((default-directory twemoji-dest-folder))
-      (call-process "curl" nil nil nil "-L" twemoji-url "--output" "twemoji.zip")
-      (message "Unzipping")
-      (call-process "unzip" nil nil nil "twemoji.zip")
-      (concat twemoji-dest-folder "/twemoji-" twemoji-version "/assets/svg"))))
-
-(defun org-latex-emoji-install-vector-graphics--convert (dir)
-  (let ((default-directory dir))
-    (if (executable-find "cairosvg") ; cairo's PDFs are ~10% smaller
-        (let* ((images (directory-files dir nil ".*.svg"))
-               (num-images (length images))
-               (index 0)
-               (max-threads (1- (string-to-number (shell-command-to-string "nproc"))))
-               (threads 0))
-          (while (< index num-images)
-            (setf threads (1+ threads))
-            (message "Converting emoji %d/%d (%s)" (1+ index) num-images (nth index images))
-            (make-process :name "cairosvg"
-                          :command (list "cairosvg" (nth index images) "-o" (concat (file-name-sans-extension (nth index images)) ".pdf"))
-                          :sentinel (lambda (proc msg)
-                                      (when (memq (process-status proc) '(exit signal))
-                                        (setf threads (1- threads)))))
-            (setq index (1+ index))
-            (while (> threads max-threads)
-              (sleep-for 0.01)))
-          (while (> threads 0)
-            (sleep-for 0.01))
-          (message "Finished conversion!")))
-    (shell-command "inkscape --batch-process --export-type='pdf' *.svg")))
-
-(defun org-latex-emoji-install-vector-graphics--install (dir)
-  (message "Installing vector emojis into emoji directory")
-  (let ((images (directory-files dir t ".*.pdf"))
-        (emoji-dir (concat (emojify-image-dir) "/")))
-    (mapcar
-     (lambda (image)
-       (rename-file image emoji-dir t))
-     images)))
-#+end_src
-
-**** Remove non-ascii chars
-
-When using ~pdflatex~, almost non-ascii characters are generally problematic, and
-don't appear in the pdf. It's preferable to see that there was /some/ character
-which wasn't displayed as opposed to nothing.
-
-We check every non-ascii character to make sure it's not a character encoded by
-the =inputenc= packages when loaded with the =utf8= option. Finally, we see if we
-have our own LaTeX conversion we can apply and if there is none we replace the
-non-ascii char with =¿=.
-
-No to make sure we only remove characters that can't be displayed, we check
-=/usr/share/texmf/tex/latex/base/utf8enc.dfu=.
-
-We just need to make sure this is appended to the list of filter functions,
-since we want to let emoji processing occur first.
-
-#+begin_src emacs-lisp
-(defvar +org-pdflatex-inputenc-encoded-chars
-  "[[:ascii:]\u00A0-\u01F0\u0218-\u021BȲȳȷˆˇ˜˘˙˛˝\u0400-\u04FFḂḃẞ\u200C\u2010-\u201E†‡•…‰‱‹›※‽⁄⁎⁒₡₤₦₩₫€₱℃№℗℞℠™Ω℧℮←↑→↓〈〉␢␣◦◯♪⟨⟩Ḡḡ\uFB00-\uFB06]")
-
-(defun +org-latex-replace-non-ascii-chars (text backend info)
-  "Replace non-ascii chars with \\char\"XYZ forms."
-  (when (and (org-export-derived-backend-p backend 'latex)
-             (string= (plist-get info :latex-compiler) "pdflatex"))
-    (let (case-replace)
-      (replace-regexp-in-string "[^[:ascii:]]"
-                                (lambda (nonascii)
-                                  (if (string-match-p +org-pdflatex-inputenc-encoded-chars nonascii) nonascii
-                                    (or (cdr (assoc nonascii +org-latex-non-ascii-char-substitutions)) "¿")))
-                                text))))
-
-(add-to-list 'org-export-filter-final-output-functions #'+org-latex-replace-non-ascii-chars t)
-#+end_src
-
-Now, there are some symbols that aren't included in =inputenc=, but we should be
-able to handle anyway. For them we define a table of LaTeX translations
-
-#+name: latex-non-ascii-char-substitutions
-| Character | LaTeX           |
-|-----------+-----------------|
-| ɑ         | \(\alpha\)      |
-| β         | \(\beta\)       |
-| γ         | \(\gamma\)      |
-| δ         | \(\delta\)      |
-| ε         | \(\epsilon\)    |
-| ϵ         | \(\varepsilon\) |
-| ζ         | \(\zeta\)       |
-| η         | \(\eta\)        |
-| θ         | \(\theta\)      |
-| ϑ         | \(\vartheta\)   |
-| ι         | \(\iota\)       |
-| κ         | \(\kappa\)      |
-| λ         | \(\lambda\)     |
-| μ         | \(\mu\)         |
-| ν         | \(\nu\)         |
-| ξ         | \(\xi\)         |
-| π         | \(\pi\)         |
-| ϖ         | \(\varpi\)      |
-| ρ         | \(\rho\)        |
-| ϱ         | \(\varrho\)     |
-| σ         | \(\sigma\)      |
-| ς         | \(\varsigma\)   |
-| τ         | \(\tau\)        |
-| υ         | \(\upsilon\)    |
-| ϕ         | \(\phi\)        |
-| φ         | \(\varphi\)     |
-| ψ         | \(\psi\)        |
-| ω         | \(\omega\)      |
-| Γ         | \(\Gamma\)      |
-| Δ         | \(\Delta\)      |
-| Θ         | \(\Theta\)      |
-| Λ         | \(\Lambda\)     |
-| Ξ         | \(\Xi\)         |
-| Π         | \(\Pi\)         |
-| Σ         | \(\Sigma\)      |
-| Υ         | \(\Upsilon\)    |
-| Φ         | \(\Phi\)        |
-| Ψ         | \(\Psi\)        |
-| Ω         | \(\Omega\)      |
-| א         | \(\aleph\)      |
-| ב         | \(\beth\)       |
-| ד         | \(\daleth\)     |
-| ג         | \(\gimel\)      |
-
-#+name: gen-latex-non-ascii-char-substitutions
-#+begin_src emacs-lisp :noweb-ref none :var latex-non-ascii-char-substitutions=latex-non-ascii-char-substitutions
-(replace-regexp-in-string
- " '((" "\n   '(("
- (replace-regexp-in-string
-  ") (" ")\n     ("
-  (prin1-to-string
-   `(defvar +org-latex-non-ascii-char-substitutions
-      ',(mapcar
-         (lambda (entry)
-           (cons (car entry) (replace-regexp-in-string "\\\\" "\\\\\\\\" (cadr entry))))
-         latex-non-ascii-char-substitutions)))))
-#+end_src
-
-#+begin_src emacs-lisp :noweb no-export
-<<gen-latex-non-ascii-char-substitutions()>>
-#+end_src
 **** Normal spaces after abbreviations
 
 In LaTeX inter-word and sentence spaces are typically of different widths. This
@@ -7217,6 +6676,236 @@ export to a PDF.
 #+begin_src emacs-lisp :noweb no-export
 <<org-missing-latex-packages()>>
 #+end_src
+**** Custom classes
+
+#+begin_src emacs-lisp
+;;org-mode source code setup in exporting to latex
+(add-to-list 'org-latex-packages-alist
+	     '("" "xcolor" t))
+(add-to-list 'org-latex-packages-alist
+	     '("" "listings" t))
+;;(add-to-list 'org-latex-packages-alist
+;;             '("" "fontspec" t))
+(add-to-list 'org-latex-packages-alist
+	     '("" "indentfirst" t))
+;;(add-to-list 'org-latex-packages-alist
+;;             '("" "xunicode" t))
+(add-to-list 'org-latex-packages-alist
+	     '("" "float"))
+(add-to-list 'org-latex-packages-alist
+	     '("" "longtable"))
+(add-to-list 'org-latex-packages-alist
+	     '("" "tikz"))
+(add-to-list 'org-latex-packages-alist
+	     '("" "fancyhdr"))
+(add-to-list 'org-latex-packages-alist
+	     '("" "textcomp"))
+(add-to-list 'org-latex-packages-alist
+	     '("" "amsmath"))
+(add-to-list 'org-latex-packages-alist
+	     '("" "amsthm"))
+(add-to-list 'org-latex-packages-alist
+	     '("" "tabularx" t))
+(add-to-list 'org-latex-packages-alist
+	     '("" "booktabs" t))
+(add-to-list 'org-latex-packages-alist
+	     '("" "grffile" t))
+(add-to-list 'org-latex-packages-alist
+	     '("" "wrapfig" t))
+(add-to-list 'org-latex-packages-alist
+	     '("normalem" "ulem" t))
+(add-to-list 'org-latex-packages-alist
+	     '("" "amssymb" t))
+(add-to-list 'org-latex-packages-alist
+	     '("" "extarrows" t))
+(add-to-list 'org-latex-packages-alist
+	     '("" "capt-of" t))
+(add-to-list 'org-latex-packages-alist
+	     '("figuresright" "rotating" t))
+
+(add-to-list 'org-latex-classes
+	     '("xhyang-org-book"
+	       "\\documentclass{book}
+\\usepackage[slantfont, boldfont]{xeCJK}
+% chapter set
+\\usepackage{titlesec}
+\\usepackage{hyperref}
+\\usepackage[scale=0.75]{geometry}
+\\hypersetup{colorlinks,linkcolor=black,filecolor=black,urlcolor=blue,citecolor=black}
+\\usepackage{fontspec}
+\\usepackage{xunicode}
+\\titleformat{\\paragraph}{\\normalfont\\normalsize\\bfseries}{\\theparagraph}{1em}{}
+[NO-DEFAULT-PACKAGES]
+[PACKAGES]
+
+\\setCJKmainfont{WenQuanYi Micro Hei} % 设置缺省中文字体
+\\setCJKsansfont{WenQuanYi Micro Hei}
+\\setCJKmonofont{WenQuanYi Micro Hei Mono}
+
+%\\setmainfont{DejaVu Sans} % 英文衬线字体
+%\\setsansfont{DejaVu Serif} % 英文无衬线字体
+%\\setmonofont{DejaVu Sans Mono}
+
+%如果没有它，会有一些 tex 特殊字符无法正常使用，比如连字符。
+\\defaultfontfeatures{Mapping=tex-text}
+
+% 中文断行
+\\XeTeXlinebreaklocale \"zh\"
+\\XeTeXlinebreakskip = 0pt plus 1pt minus 0.1pt
+
+% 代码设置
+\\lstset{numbers=left,
+numberstyle= \\tiny,
+keywordstyle= \\color{ blue!70},commentstyle=\\color{red!50!green!50!blue!50},
+frame=shadowbox,
+breaklines=true,
+rulesepcolor= \\color{ red!20!green!20!blue!20}
+}
+
+[EXTRA]
+"
+	       ("\\chapter{%s}" . "\\chapter*{%s}")
+	       ("\\section{%s}" . "\\section*{%s}")
+	       ("\\subsection{%s}" . "\\subsection*{%s}")
+	       ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+	       ("\\paragraph{%s}" . "\\paragraph*{%s}")
+	       ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+
+(add-to-list 'org-latex-classes
+	     '(
+               "xhyang-org-article"
+	       "\\documentclass{article}
+\\usepackage[slantfont, boldfont]{xeCJK}
+\\usepackage[scale=0.75]{geometry}
+\\usepackage{titlesec}
+\\usepackage{hyperref}
+\\hypersetup{colorlinks,linkcolor=black,filecolor=black,urlcolor=blue,citecolor=black}
+\\usepackage{fontspec}
+\\usepackage{xunicode}
+\\titleformat{\\paragraph}{\\normalfont\\normalsize\\bfseries}{\\theparagraph}{1em}{}
+
+[NO-DEFAULT-PACKAGES]
+[PACKAGES]
+
+\\parindent 2em
+
+\\setCJKmainfont{WenQuanYi Micro Hei} % 设置缺省中文字体
+\\setCJKsansfont{WenQuanYi Micro Hei}
+\\setCJKmonofont{WenQuanYi Micro Hei Mono}
+
+%\\setmainfont{DejaVu Sans} % 英文衬线字体
+%\\setsansfont{DejaVu Serif} % 英文无衬线字体
+%\\setmonofont{DejaVu Sans Mono}
+
+%如果没有它，会有一些 tex 特殊字符无法正常使用，比如连字符。
+\\defaultfontfeatures{Mapping=tex-text}
+
+% 中文断行
+\\XeTeXlinebreaklocale \"zh\"
+\\XeTeXlinebreakskip = 0pt plus 1pt minus 0.1pt
+
+% 代码设置
+\\lstset{numbers=left,
+numberstyle= \\tiny,
+keywordstyle= \\color{ blue!70},commentstyle=\\color{red!50!green!50!blue!50},
+frame=shadowbox,
+breaklines=true,
+rulesepcolor= \\color{ red!20!green!20!blue!20}
+}
+
+[EXTRA]
+"
+	       ("\\section{%s}" . "\\section*{%s}")
+	       ("\\subsection{%s}" . "\\subsection*{%s}")
+	       ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+	       ("\\paragraph{%s}" . "\\paragraph*{%s}")
+	       ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+
+(add-to-list 'org-latex-classes
+	     '("xhyang-org-beamer"
+	       "\\documentclass{beamer}
+\\usepackage[slantfont, boldfont]{xeCJK}
+% beamer set
+\\usepackage[none]{hyphenat}
+\\usepackage[abs]{overpic}
+\\usepackage{fontspec}
+\\usepackage{xunicode}
+
+
+[NO-DEFAULT-PACKAGES]
+[PACKAGES]
+
+\\setCJKmainfont{WenQuanYi Micro Hei} % 设置缺省中文字体
+\\setCJKsansfont{WenQuanYi Micro Hei}
+\\setCJKmonofont{WenQuanYi Micro Hei Mono}
+
+\\setmainfont{DejaVu Sans} % 英文衬线字体
+\\setsansfont{DejaVu Serif} % 英文无衬线字体
+\\setmonofont{DejaVu Sans Mono}
+
+%如果没有它，会有一些 tex 特殊字符无法正常使用，比如连字符。
+\\defaultfontfeatures{Mapping=tex-text}
+
+% 中文断行
+\\XeTeXlinebreaklocale \"zh\"
+\\XeTeXlinebreakskip = 0pt plus 1pt minus 0.1pt
+
+% 代码设置
+\\lstset{numbers=left,
+numberstyle= \\tiny,
+keywordstyle= \\color{ blue!70},commentstyle=\\color{red!50!green!50!blue!50},
+frame=shadowbox,
+breaklines=true,
+rulesepcolor= \\color{ red!20!green!20!blue!20}
+}
+
+[EXTRA]
+"
+	       ("\\section{%s}" . "\\section*{%s}")
+	       ("\\subsection{%s}" . "\\subsection*{%s}")
+	       ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+	       ("\\paragraph{%s}" . "\\paragraph*{%s}")
+	       ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(add-to-list 'org-latex-classes
+	     '("xhyang-org-review"
+	       "\\documentclass{article}
+\\usepackage{lipsum} % Used for inserting dummy 'Lorem ipsum' text into the template
+\\usepackage[slantfont, boldfont]{xeCJK}
+\\usepackage{hyperref}
+\\usepackage{pstricks}
+\\usepackage{amssymb}
+\\usepackage{paralist}
+
+[NO-DEFAULT-PACKAGES]
+[PACKAGES]
+\\setCJKmainfont{WenQuanYi Micro Hei} % 设置缺省中文字体
+\\setCJKsansfont{WenQuanYi Micro Hei}
+\\setCJKmonofont{WenQuanYi Micro Hei Mono}
+
+\\setmainfont{DejaVu Sans} % 英文衬线字体
+\\setsansfont{DejaVu Serif} % 英文无衬线字体
+\\setmonofont{DejaVu Sans Mono}
+
+%如果没有它，会有一些 tex 特殊字符无法正常使用，比如连字符。
+\\defaultfontfeatures{Mapping=tex-text}
+
+% 中文断行
+\\XeTeXlinebreaklocale \"zh\"
+\\XeTeXlinebreakskip = 0pt plus 1pt minus 0.1pt
+
+
+[EXTRA]
+"
+	       ("\\section{%s}" . "\\section*{%s}")
+	       ("\\subsection{%s}" . "\\subsection*{%s}")
+	       ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+	       ("\\paragraph{%s}" . "\\paragraph*{%s}")
+	       ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
+               ))
+#+end_src
+
 *** Beamer Export
 It's nice to use a different theme
 #+begin_src emacs-lisp
@@ -7444,7 +7133,6 @@ Not added when either:
     result))
 #+end_src
 ** LaTeX
-[[xkcd:1301]]
 *** To-be-implemented ideas
 - Paste image from clipboard
   + Determine first folder in ~graphicspath~ if applicable
