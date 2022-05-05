@@ -349,8 +349,10 @@ just need to resort to =SPC b o= for now.
 *** All the icons
 #+begin_src emacs-lisp
 (after! all-the-icons
-  (unless (find-font (font-spec :name "all-the-icons"))
-    (all-the-icons-install-fonts t)))
+  (when (and (display-graphic-p)
+               (not (find-font (font-spec :name "all-the-icons"))))
+    (all-the-icons-install-fonts t))
+  )
 #+end_src
 ** Doom configuration
 *** Modules
@@ -668,7 +670,7 @@ if the system doesn't have any of those fonts.
 
 #+name: detect-missing-fonts
 #+begin_src emacs-lisp :tangle no
-(defvar required-fonts '("JetBrains Mono" "Merriweather" "Alegreya"))
+(defvar required-fonts '("JetBrains Mono" "Merriweather" "Alegreya" "all\\\\-the\\\\-icons"))
 
 (defvar available-fonts
   (delete-dups (or (font-family-list)
@@ -4638,7 +4640,7 @@ I want to use headings to provide a structure for writing that doesn't appear in
 the final documents.
 #+begin_src emacs-lisp
 (require 'ox-extra)
-(ox-extras-activate '(ignore-headlines))
+(ox-extras-activate '(latex-header-blocks ignore-headlines))
 #+end_src
 
 Since I (roughly) track Org ~HEAD~, it makes sense to include the git version in
