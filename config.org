@@ -1606,8 +1606,9 @@ From the =:core packages= module.
  "<<" ">>"
  :actions '(insert))
 
-(define-key smartparens-mode-map (kbd "M-k") 'sp-kill-hybrid-sexp)
-(define-key smartparens-mode-map [remap kill-line] 'sp-kill-hybrid-sexp)
+(define-key prog-mode-map (kbd "C-k") 'sp-kill-hybrid-sexp)
+;;(define-key smartparens-mode-map (kbd "M-k") 'sp-kill-hybrid-sexp)
+;;(define-key smartparens-mode-map [remap kill-line] 'sp-kill-hybrid-sexp)
 (defadvice sp-kill-hybrid-sexp (before kill-line-cleanup-whitespace activate)
   "cleanup whitespace on sp-kill-hybrid-sexp"
   (if (bolp)
