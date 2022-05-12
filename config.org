@@ -1626,6 +1626,13 @@ From the =:core packages= module.
 (customize-set-variable 'sp-ignore-modes-list (quote (minibuffer-inactive-mode)))
 (customize-set-variable 'sp-successive-kill-preserve-whitespace 2)
 #+end_src
+*** Treemacs
+#+begin_src emacs-lisp
+(after! treemacs
+  (define-key! treemacs-mode-map
+    "+" #'treemacs-expand-node
+    "-" #'treemacs-collapse-node))
+#+end_src
 
 ** Visuals
 *** Info colours
@@ -2401,6 +2408,49 @@ Now let's use this instead of wordnet.
   (lexic-search identifier nil nil t))
 #+end_src
 
+#+begin_src emacs-lisp :tangle (if (not (executable-find "sdcv")) "yes" "no")
+(defun -format-result (json)
+  "Format result in JSON."
+  (let* ((query        (assoc-default 'query       json)) ; string
+         (translation  (assoc-default 'translation json)) ; array
+         (_errorCode    (assoc-default 'errorCode   json)) ; number
+         (web          (assoc-default 'web         json)) ; array
+         (basic        (assoc-default 'basic       json)) ; alist
+         ;; construct data for display
+         (phonetic (assoc-default 'phonetic basic))
+         (translation-str (mapconcat
+                           (lambda (trans) (concat "- " trans))
+                           translation "\n"))
+         (basic-explains-str (mapconcat
+                              (lambda (explain) (concat "- " explain))
+                              (assoc-default 'explains basic) "\n"))
+         (web-str (mapconcat
+                   (lambda (k-v)
+                     (format "- %s :: %s"
+                             (assoc-default 'key k-v)
+                             (mapconcat 'identity (assoc-default 'value k-v) "; ")))
+                   web "\n")))
+    (if basic
+        (format "%s [%s]\n\n* Basic Explains\n%s\n\n* Web References\n%s\n"
+                query phonetic basic-explains-str web-str)
+      (format "%s\n\n* Translation\n%s\n"
+              query translation-str))))
+
+(defun define-word--parse-youdao ()
+  "Parse definition from webstersdictionary1828.com."
+  (save-match-data
+    (set-buffer-multibyte t)
+    (goto-char (point-min))
+    (-format-result (json-read))
+))
+
+(setq-default define-word-services
+              '((youdao "http://fanyi.youdao.com/openapi.do?keyfrom=YouDaoCV&key=659600698&type=data&doctype=json&version=1.1&q=%s" define-word--parse-youdao )
+                (webster "http://webstersdictionary1828.com/Dictionary/%s" define-word--parse-webster)
+                (openthesaurus "https://www.openthesaurus.de/synonyme/%s" define-word--parse-openthesaurus)))
+
+(setq-default define-word-default-service 'youdao)
+#+end_src
 Lastly, I want to make sure I have some dictionaries set up. I've put a tarball
 of dictionaries online which we can download if none seem to be present on the
 system.
