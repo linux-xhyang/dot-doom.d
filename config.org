@@ -1669,7 +1669,12 @@ Current pattern: %`evil-mc-pattern
   :prefix "g"
   :nv "zh" #'my-mc-hydra/body))
 #+end_src
-
+*** Expand region
+#+begin_src emacs-lisp
+(map!
+      :v "v"         #'er/expand-region
+)
+#+end_src
 ** Visuals
 *** Info colours
 This makes manual pages nicer to look at by adding variable pitch fontification
