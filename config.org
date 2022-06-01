@@ -1134,8 +1134,8 @@ have the following.
 ;;; Code:
 (require 'cl-lib)
 
-(defcustom irony-pp-compiler-executable (or (executable-find "clang")
-                                            (executable-find "gcc"))
+(defcustom irony-pp-compiler-executable (or (executable-find "g++")
+                                            (executable-find "clang"))
   "Path of a GCC/Clang compatible compiler executable."
   :group 'irony
   :type '(file :must-match t))
@@ -1235,10 +1235,16 @@ Memoize the search in a hash table."
         (message "not found ccls")
         (let* ((compile-options '("g++" "-Wall" "-Wextra" "-pedantic" "-std=c++17" "-stdlib=libc++"))
                (_ (mapcar (lambda (name)
-                                  (add-to-list 'compile-options (concat "-isystem" name) t))
-                                (irony-pp-system-search-paths))))
-            (write-region (string-join compile-options "\n") nil ccls-file)
+                            (add-to-list 'compile-options (concat "-isystem" name) t))
+                          (irony-pp-system-search-paths))))
+          (when (file-writable-p ccls-file)
+            (write-region (string-join compile-options "\n") nil
+                        ccls-file)
             )
+
+          ;; (write-region (string-join compile-options "\n") nil
+          ;;               (concat (file-name-as-directory temporary-file-directory) "/.ccls"))
+          )
         ))))
 #+end_src
 
@@ -1249,11 +1255,11 @@ Memoize the search in a hash table."
              #'irony-pp-generate-ccls-config-file)
   (setq
    ccls-args
-    (list
-     (concat "--log-file="
-             (expand-file-name "~/.emacs.d/.cache/ccls.log")))
+   (list
+    (concat "--log-file="
+            (expand-file-name "~/.emacs.d/.cache/ccls.log")))
    ccls-initialization-options
-   '(:completion (:detailedLabel t)
+   `(:completion (:detailedLabel t)
      :index (:initialReparseForDependency :json-false :comments 2 :threads 2)
      :cache (:retainInMemory 2 :format "binary")
      :diagnostics (:onChange 1000 :onOpen 0 :onSave 0)
@@ -1268,7 +1274,12 @@ Memoize the search in a hash table."
        "-mskip-rax-setup" "-fno-strict-aliasing" "-fno-common" "-fno-PIE" "-fno-PIE" "-fno-dwarf2-cfi-asm"
        "-fno-omit-frame-pointer" "-fno-ipa-sra" "-funwind-tables" "-march=armv8-a" "-march=armv7-a"
        "--param=allow-store-data-races=0" "-Wa arch/x86/kernel/macros.s"]
-      :extraArgs ["--gcc-toolchain=/usr"])))
+      :extraArgs ,(with-temp-buffer
+                   (c++-mode)
+                   (vconcat '("g++" "-Wall" "-Wextra" "-pedantic" "-std=c++17" "-stdlib=libc++")
+                    (mapcar (lambda (name)
+                                      (concat "-isystem" name))
+                                    (irony-pp-system-search-paths)))))))
   )
 #+end_src
 *** clipetty
@@ -3242,7 +3253,6 @@ Now, by default, LSPs don't really function at all in ~src~ blocks.
 #+begin_src emacs-lisp
 (cl-defmacro lsp-org-babel-enable (lang)
   "Support LANG in org source code block."
-  (setq centaur-lsp 'lsp-mode)
   (cl-check-type lang stringp)
   (let* ((edit-pre (intern (format "org-babel-edit-prep:%s" lang)))
          (intern-pre (intern (format "lsp--%s" (symbol-name edit-pre)))))
@@ -3250,7 +3260,7 @@ Now, by default, LSPs don't really function at all in ~src~ blocks.
        (defun ,intern-pre (info)
          (let ((file-name (->> info caddr (alist-get :file))))
            (unless file-name
-             (setq file-name (make-temp-file "babel-lsp-")))
+             (setq file-name (concat (make-temp-file "babel-lsp-") "." ,lang)))
            (setq buffer-file-name file-name)
            (lsp-deferred)))
        (put ',intern-pre 'function-documentation
@@ -3265,7 +3275,7 @@ Now, by default, LSPs don't really function at all in ~src~ blocks.
                 (format "Prepare local buffer environment for org source block (%s)."
                         (upcase ,lang))))))))
 (defvar org-babel-lang-list
-  '("go" "python" "ipython" "bash" "sh"))
+  '("go" "python" "ipython" "bash" "sh" "cpp" "java" "c"))
 (dolist (lang org-babel-lang-list)
   (eval `(lsp-org-babel-enable ,lang)))
 #+end_src
