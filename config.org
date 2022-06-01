@@ -1131,7 +1131,122 @@ have the following.
 #+end_src
 *** Ccls
 #+begin_src emacs-lisp
+;;; Code:
+(require 'cl-lib)
+
+(defcustom irony-pp-compiler-executable (or (executable-find "clang")
+                                            (executable-find "gcc"))
+  "Path of a GCC/Clang compatible compiler executable."
+  :group 'irony
+  :type '(file :must-match t))
+
+(defcustom irony-pp-compiler-args
+  '("-v" "-E" "/dev/null")
+  "The lang option will be automatically added (-x c++ / -x c)."
+  :group 'irony
+  :type '(choice (repeat string)))
+
+(defcustom irony-clang-lang-options-alist
+  '((c++-mode  . "c++")
+    (c-mode    . "c")
+    (objc-mode . "objective-c"))
+  "Association list of major-mode/lang-option to pass to clang."
+  :type '(alist :key-type symbol :value-type string)
+  :group 'irony)
+
+;; Internal variables
+(defvar irony-pp-include-re
+  "^#\\s-*include\\s-+[<\"]\\(\\(?:[^>\"]*\\)\\)\\="
+  "Regexp used to search backward if we are inside an include
+  statement.")
+
+(defvar irony-pp-system-searth-paths-cache (make-hash-table :test 'eq)
+  "*internal variable* Memoize compiler search paths.")
+
+;; What's parsed:
+;; #include "..." search starts here:
+;;  includes...
+;; #include <...> search starts here:
+;;  /usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.2/../../../../include/c++/4.6.2/x86_64-unknown-linux-gnu
+;;  /usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.2/../../../../include/c++/4.6.2/backward
+;;  /usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.2/include
+;;  /usr/local/include
+;;  /usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.2/include-fixed
+;;  /usr/include
+;; End of search list.
+;;
+(defmacro irony--awhen (test &rest body)
+  (declare (indent 1))
+  `(let ((it ,test))
+     (when it
+       (progn ,@body))))
+
+(defun irony--libclang-lang-compile-options ()
+  (irony--awhen (cdr-safe (assq major-mode irony-clang-lang-options-alist))
+    (list "-x" it)))
+
+(defun irony-pp-system-search-paths-1 ()
+  "*Internal function* Really retrieve compiler search paths.
+Please use `irony-pp-system-search-paths'."
+  (when irony-pp-compiler-executable
+    ;; `irony--libclang-lang-compile-options' should be called out of `with-temp-buffer'
+    (let ((lang-options (irony--libclang-lang-compile-options)))
+      (with-temp-buffer
+        (apply 'call-process irony-pp-compiler-executable nil t nil
+               (append
+                lang-options
+                irony-pp-compiler-args))
+        (goto-char (point-min))
+        (let (directories
+              (start "#include \"...\" search starts here:")
+              (second-start "#include <...> search starts here:")
+              (stop "End of search list."))
+          (when (search-forward start nil t)
+            (forward-line 1)
+            (while (not (looking-at-p second-start))
+              ;; skip whitespace at the begining of the line
+              (skip-chars-forward "[:blank:]" (point-at-eol))
+              (push (buffer-substring (point) (point-at-eol)) directories)
+              (forward-line 1))
+            (forward-line 1)
+            (while (not (or (looking-at-p stop)
+                            (eolp)))
+              ;; skip whitespace at the begining of the line
+              (skip-chars-forward "[:blank:]" (point-at-eol))
+              (push (buffer-substring (point) (point-at-eol)) directories)
+              (forward-line 1)))
+          directories)))))
+
+(defun irony-pp-system-search-paths ()
+  (interactive)
+  "Retrieve compiler search paths for header files.
+Memoize the search in a hash table."
+  (or (gethash major-mode irony-pp-system-searth-paths-cache)
+      (puthash major-mode (irony-pp-system-search-paths-1) ;value is returned
+               irony-pp-system-searth-paths-cache)))
+(defun irony-pp-generate-ccls-config-file ()
+  (interactive)
+  (when (lsp--suggest-project-root)
+    (let* ((dir (lsp--suggest-project-root))
+           (compile-json (concat dir "/" "compile_commands.json"))
+           (ccls-file (concat dir "/" ".ccls")))
+
+      (unless (cl-find-if #'file-exists-p (list compile-json ccls-file))
+        (message "not found ccls")
+        (let* ((compile-options '("g++" "-Wall" "-Wextra" "-pedantic" "-std=c++17" "-stdlib=libc++"))
+               (_ (mapcar (lambda (name)
+                                  (add-to-list 'compile-options (concat "-isystem" name) t))
+                                (irony-pp-system-search-paths))))
+            (write-region (string-join compile-options "\n") nil ccls-file)
+            )
+        ))))
+#+end_src
+
+#+begin_src emacs-lisp
 (after! ccls
+  (add-hook! '(c-mode-local-vars-hook
+               c++-mode-local-vars-hook)
+             #'irony-pp-generate-ccls-config-file)
   (setq
    ccls-args
     (list
@@ -1422,6 +1537,7 @@ let's improve that memory.
 #+begin_src emacs-lisp
 (set-company-backend!
   '(text-mode
+    json-mode
     markdown-mode
     gfm-mode)
   '(:seperate
@@ -1538,7 +1654,10 @@ file uploading script (which I've renamed to ~upload~).
          :hostName "localhost"
          :port 6666)))
 #+end_src
-
+*** C/C++ gdb
+#+begin_src emacs-lisp
+(require 'dap-cpptools)
+#+end_src
 *** Etrace
 
 The /Emacs Lisp Profiler/ (ELP) does a nice job recording information, but it
@@ -4496,7 +4615,7 @@ let's make it transparent.
 We can either render from a ~dvi~ or ~pdf~ file, so let's benchmark ~latex~ and
 ~pdflatex~.
 | ~latex~ time | ~pdflatex~ time |
-|--------------+-----------------|
+|------------+---------------|
 | 135 \pm 2 ms | 215 \pm 3 ms    |
 
 On the rendering side, there are two ~.dvi~-to-image converters which I am
@@ -4506,12 +4625,12 @@ size and prefer a vector graphic.
 
 Using the above latex expression and benchmarking lead to the following results:
 | ~dvipng~ time | ~dvisvgm~ time | ~pdf2svg~ time |
-|---------------+----------------+----------------|
+|-------------+--------------+--------------|
 | 89 \pm 2 ms   | 178 \pm 2 ms   | 12 \pm 2 ms    |
 
 Now let's combine this to see what's best
-| Tool chain             | Total time   | Resultant file size |
-|------------------------+--------------+---------------------|
+| Tool chain         | Total time | Resultant file size |
+|--------------------+------------+---------------------|
 | ~latex~ + ~dvipng~     | 226 \pm 2 ms | 7 KiB               |
 | ~latex~ + ~dvisvgm~    | 392 \pm 4 ms | 8 KiB               |
 | ~pdflatex~ + ~pdf2svg~ | 230 \pm 2 ms | 16 KiB              |
