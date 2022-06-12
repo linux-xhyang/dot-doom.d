@@ -1282,6 +1282,14 @@ Memoize the search in a hash table."
                                     (irony-pp-system-search-paths)))))))
   )
 #+end_src
+*** Lsp-java
+#+begin_src emacs-lisp
+(after! lsp-java
+  (setq-default lsp-java-vmargs
+                '("-XX:+UseParallelGC" "-XX:GCTimeRatio=4" "-XX:AdaptiveSizePolicyWeight=90" "-Dsun.zip.disableMemoryMapping=true" "-Xmx5G" "-Xms200m")))
+#+end_src
+
+
 *** clipetty
 #+begin_src emacs-lisp :tangle packages.el
 (package! clipetty :recipe (:host github :repo "spudlyo/clipetty" :files ("*.el")))
