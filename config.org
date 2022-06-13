@@ -2857,7 +2857,7 @@ While ~org-hide-emphasis-markers~ is very nice, it can sometimes make edits whic
 occur at the border a bit more fiddley. We can improve this situation without
 sacrificing visual amenities with the =org-appear= package.
 #+begin_src emacs-lisp
-(package! org-appear :recipe (:host github :repo "awt   h13/org-appear")
+(package! org-appear :recipe (:host github :repo "awth13/org-appear")
   :pin "303fcc8d5d85a4ebff2798dab50b2ccc0255ea5f")
 #+end_src
 
