@@ -3340,7 +3340,8 @@ The agenda is nice, but a souped up version is nicer.
       org-agenda-include-deadlines t
       org-agenda-block-separator nil
       org-agenda-tags-column 100 ;; from testing this seems to be a good value
-      org-agenda-compact-blocks t)
+      org-agenda-compact-blocks t
+      org-agenda-files (list (cl-find-if #'file-exists-p '("~/note/org/gtd/" "~/Nextcloud/note/org/gtd/" "~/.org/"))))
 
 (setq org-agenda-custom-commands
       '(("o" "Overview"
@@ -4633,7 +4634,7 @@ let's make it transparent.
 We can either render from a ~dvi~ or ~pdf~ file, so let's benchmark ~latex~ and
 ~pdflatex~.
 | ~latex~ time | ~pdflatex~ time |
-|------------+---------------|
+|--------------+-----------------|
 | 135 \pm 2 ms | 215 \pm 3 ms    |
 
 On the rendering side, there are two ~.dvi~-to-image converters which I am
@@ -4643,12 +4644,12 @@ size and prefer a vector graphic.
 
 Using the above latex expression and benchmarking lead to the following results:
 | ~dvipng~ time | ~dvisvgm~ time | ~pdf2svg~ time |
-|-------------+--------------+--------------|
+|---------------+----------------+----------------|
 | 89 \pm 2 ms   | 178 \pm 2 ms   | 12 \pm 2 ms    |
 
 Now let's combine this to see what's best
-| Tool chain         | Total time | Resultant file size |
-|--------------------+------------+---------------------|
+| Tool chain             | Total time   | Resultant file size |
+|------------------------+--------------+---------------------|
 | ~latex~ + ~dvipng~     | 226 \pm 2 ms | 7 KiB               |
 | ~latex~ + ~dvisvgm~    | 392 \pm 4 ms | 8 KiB               |
 | ~pdflatex~ + ~pdf2svg~ | 230 \pm 2 ms | 16 KiB              |
