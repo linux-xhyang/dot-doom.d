@@ -780,11 +780,6 @@ avoid polluting the output.
 #+begin_src emacs-lisp :tangle cli.el :comments no
 ;;; cli.el -*- lexical-binding: t; -*-
 (setq org-confirm-babel-evaluate nil)
-
-(defun doom-shut-up-a (orig-fn &rest args)
-  (quiet! (apply orig-fn args)))
-
-(advice-add 'org-babel-execute-src-block :around #'doom-shut-up-a)
 #+end_src
 *** Asynchronous config tangling
 Doom adds an =org-mode= hook ~+literate-enable-recompile-h~. This is a nice idea,
@@ -1096,6 +1091,7 @@ have the following.
 #+begin_src emacs-lisp
 (after! lsp-mode
   (setq lsp-auto-guess-root t
+        lsp-idle-delay 0.500
         lsp-auto-execute-action nil
         lsp-lens-enable nil
         lsp-auto-guess-root t
@@ -1901,7 +1897,7 @@ For starters, twitter's emojis look nicer than emoji-one.
 Other than that, this is pretty great OOTB 😀.
 
 #+begin_src emacs-lisp
-(setq emojify-emoji-set "twemoji-v2")
+(setq emojify-emoji-set "twemoji-v2-22")
 #+end_src
 
 One minor annoyance is the use of emojis over the default character
@@ -2784,56 +2780,6 @@ Then adding a regex for it to =~/.config/git/config=
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle packages.el :comments no
 :END:
-****  Org itself
-There are actually three possible package statements I may want to use for Org.
-
-If I'm on a machine where I can push changes, I want to be able to develop Org.
-I can check this by checking the content of the SSH key =~/.ssh/id_ed25519.pub=.
-1. If this key exists and there isn't a repo at
-   =$straight-base-dir/straight/repos/org-mode= with the right remote, we should
-   install it as such.
-2. If the key exists and repo are both set up, the package should just be ignored.
-3. If the key does not exist, the Org's ~HEAD~ should just be used
-
-To account for this situation properly, we need a short script to determine the
-correct package statement needed.
-
-#+name: org-pkg-statement
-#+begin_src emacs-lisp :tangle no
-(load (expand-file-name "core/core.el" user-emacs-directory) nil t) ; for `doom-local-dir'
-(let ((dev-key (and (file-exists-p "~/.ssh/id_ed25519.pub")
-                    (= 0 (shell-command "cat ~/.ssh/id_ed25519.pub | grep -q AAAAC3NzaC1lZDI1NTE5AAAAIOZZqcJOLdN+QFHKyW8ST2zz750+8TdvO9IT5geXpQVt"))))
-      (dev-pkg (let ((default-directory (expand-file-name "straight/repos/org-mode" doom-local-dir)))
-                 (and (file-exists-p default-directory)
-                      (string= "tec@git.savannah.gnu.org:/srv/git/emacs/org-mode.git\n" (shell-command-to-string "git remote get-url origin")))))
-      (recipe-common '(:files ("*.el" "lisp/*.el" "etc")
-                       :pre-build
-                       (with-temp-file (doom-path (straight--repos-dir "org-mode") "org-version.el")
-                         (insert "(fset 'org-release (lambda () \"9.5\"))\n"
-                                 (format "(fset 'org-git-version (lambda () \"%s\"))\n"
-                                         (substring (shell-command-to-string "git rev-parse --short HEAD") 0 -1))
-                                 "(provide 'org-version)\n"))
-                       :includes org)))
-  (prin1-to-string
-   `(package! org-mode
-      :recipe (,@(cond ((and dev-key dev-pkg)
-                        (list :host nil :repo nil :local-repo (expand-file-name "straight/repos/org-mode" doom-local-dir)))
-                       (dev-key
-                        (list :host nil :repo "tec@git.savannah.gnu.org:/srv/git/emacs/org-mode.git"))
-                       (t
-                        (list :host 'github :repo "emacs-straight/org-mode")))
-               ,@recipe-common)
-      :pin nil)))
-#+end_src
-
-#+begin_src emacs-lisp :noweb no-export
-<<org-pkg-statement()>>
-(unpin! org-mode) ; there be bugs
-(package! org-contrib
-  :recipe (:host nil :repo "https://git.sr.ht/~bzg/org-contrib"
-           :files ("lisp/*.el"))
-  :pin "8c138dc5375dc13a0d1952e61c638ef4d57df368")
-#+end_src
 
 **** Visuals
 ***** Tables
