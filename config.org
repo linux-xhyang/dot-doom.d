@@ -2732,11 +2732,6 @@ figure.png╶─╧─▶ PROJECT.ORG ▶───╴filters╶───╧─�
 
 Finally, because this section is fairly expensive to initialise, we'll wrap it
 in an src_elisp{(after! ..  .)} block.
-#+begin_src emacs-lisp :noweb no-export :tangle yes :noweb-ref nil
-(after! org
-  <<org-conf>>
-)
-#+end_src
 *** System config
 **** Mime types
 Org mode isn't recognised as it's own mime type by default, but that can easily
