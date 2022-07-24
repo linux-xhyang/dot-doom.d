@@ -251,6 +251,10 @@ my home machine is pretty safe, and my laptop is shutdown a lot.
 (setq auth-sources '("~/.authinfo.gpg")
       auth-source-cache-expiry nil) ; default is 7200 (2h)
 #+end_src
+performance debug
+#+begin_src emacs-lisp :tangle packages.el
+(package! benchmark-init :pin "02435560415bbadbcf5051fb7042880549170e7e")
+#+end_src
 ** Better defaults
 *** Simple settings
 Browsing the web and seeing [[https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org#use-better-defaults][angrybacon/dotemacs]] and comparing with the values
@@ -371,7 +375,9 @@ have flags applied to tweak their behaviour.
 
 ;; This file controls what Doom modules are enabled and what order they load in.
 ;; Press 'K' on a module to view its documentation, and 'gd' to browse its directory.
-
+(when init-file-debug
+  (require 'benchmark-init)
+  (add-hook 'doom-first-input-hook #'benchmark-init/deactivate))
 (doom! :completion
        <<doom-completion>>
 
