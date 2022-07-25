@@ -1489,7 +1489,7 @@ cargo install git-delta
 
 Now we can make use of the package for this.
 #+begin_src emacs-lisp :tangle packages.el
-;; (package! magit-delta :recipe (:host github :repo "dandavison/magit-delta") :pin "56cdffd377279589aa0cb1df99455c098f1848cf")
+;; (package! magit-delta :recipe (:host github :repo "dandavison/magit-delta") :pin "5fc7dbddcfacfe46d3fd876172ad02a9ab6ac616")
 #+end_src
 
 All that's left is to hook it into magit
@@ -1605,7 +1605,7 @@ add package src directories to projectile. This isn't desirable in my opinion.
 Sometimes pressing =TAB= is just too much.
 #+begin_src emacs-lisp :tangle packages.el
 (package! aas :recipe (:host github :repo "ymarco/auto-activating-snippets")
-  :pin "b1a436922ba06ab9e1a5cc222f1a4f25a7697231")
+  :pin "566944e3b336c29d3ac11cd739a954c9d112f3fb")
 #+end_src
 
 #+begin_src emacs-lisp
@@ -1845,7 +1845,7 @@ welcomed into Emacs 28. However, he is also rather attentive with updates, and
 so I'd like to make sure we have a recent version.
 
 #+begin_src emacs-lisp :tangle packages.el
-(package! modus-themes :pin "59422c05e00d65582a005ccb06c3767622d14e03")
+(package! modus-themes :pin "5d35fed1ab7d2d59f64b2c5dcf77c05e64a0322e")
 #+end_src
 
 *** Theme magic
@@ -2374,7 +2374,7 @@ we're at it.
 What's even the point of using Emacs unless you're constantly telling everyone
 about it?
 #+begin_src emacs-lisp :tangle packages.el
-(package! elcord :pin "eb4ae2e7e03a5fc26b054ba2fa9a1d308e239c76")
+(package! elcord :pin "70fd716e673b724b30b921f4cfa0033f9c02d0f2")
 #+end_src
 
 #+begin_src emacs-lisp
@@ -2861,7 +2861,7 @@ I like the idea of being able to make HTTP requests with Babel.
 There's a really cool package in development to /transclude/ Org document content.
 #+begin_src emacs-lisp
 (package! org-transclusion :recipe (:host github :repo "nobiot/org-transclusion")
-  :pin "ccc0aaa72732ea633bf52bcc8a0345cd3ac178fd")
+  :pin "5cb94542e18722bf72a281441e944a8039b5301f")
 #+end_src
 
 #+begin_src emacs-lisp :tangle yes
@@ -2882,7 +2882,7 @@ Came across this and ... it's cool
 I *need* this in my life. It take a URL to a recipe from a common site, and
 inserts an org-ified version at point. Isn't that just great.
 #+begin_src emacs-lisp
-(package! org-chef :pin "87e9a6c4844ff32f47c8d1108ec0f087a3148a8e")
+(package! org-chef :pin "6a786e77e67a715b3cd4f5128b59d501614928af")
 #+end_src
 
 Loading after org seems a bit premature. Let's just load it when we try to use
@@ -3074,9 +3074,9 @@ There's also the new =org-cite= though. It would be nice to try that out.
 To improve =org-cite=.
 
 #+begin_src emacs-lisp :noweb-ref none :tangle packages.el
-(package! citar :pin "79512aefdf11071b66908320aa346255dd349234")
-(package! citeproc :pin "ba49516265fa24b138346c4918d39d19b4de8a62")
-(package! org-cite-csl-activate :recipe (:host github :repo "andras-simonyi/org-cite-csl-activate") :pin "a9b3f3643b587076538a767666372b31b873c294")
+(package! citar :pin "b6cd49ffb56824b8d1793b0c4268237b3d89fb45")
+(package! citeproc :pin "65e1c52486d788b9b0d4baba63645453b4abcfca")
+(package! org-cite-csl-activate :recipe (:host github :repo "andras-simonyi/org-cite-csl-activate") :pin "4fdb61c0f83b5d6db0d07dfd64d2a177fd46e931")
 #+end_src
 
 #+begin_src emacs-lisp :noweb-ref none :tangle yes
@@ -3270,7 +3270,7 @@ functionality as in LaTeX. Let's try viewing possible output files with this.
 
 The agenda is nice, but a souped up version is nicer.
 #+begin_src emacs-lisp :noweb-ref none :tangle packages.el
-(package! org-super-agenda :pin "fb5e2ef277bc811a3b061106c99e4c47b6b86f80")
+(package! org-super-agenda :pin "3108bc3f725818f0e868520d2c243abe9acbef4e")
 #+end_src
 
 #+begin_src emacs-lisp :noweb-ref none :tangle yes
@@ -3361,7 +3361,7 @@ set up org-capture.
 #+begin_src emacs-lisp :noweb-ref none :tangle packages.el
 (package! doct
   :recipe (:host github :repo "progfolio/doct")
-  :pin "9ed9b8c7f7e2ea2d2fb739d65ae4626a1cf16b9f")
+  :pin "8464809754f3316d5a2fdcf3c01ce1e8736b323b")
 #+end_src
 
 #+begin_src emacs-lisp :noweb-ref none :tangle yes
@@ -3683,8 +3683,8 @@ the [[*Window title][Window title]].
 Org-roam is nice by itself, but there are so /extra/ nice packages which integrate
 with it.
 #+begin_src emacs-lisp :noweb-ref none :tangle packages.el
-(package! org-roam-ui :recipe (:host github :repo "org-roam/org-roam-ui" :files ("*.el" "out")) :pin "309fe3c58c7081de4e2c9c64f7b40ea291926048")
-(package! websocket :pin "fda4455333309545c0787a79d73c19ddbeb57980") ; dependency of `org-roam-ui'
+(package! org-roam-ui :recipe (:host github :repo "org-roam/org-roam-ui" :files ("*.el" "out")) :pin "9474a254390b1e42488a1801fed5826b32a8030b")
+(package! websocket :pin "82b370602fa0158670b1c6c769f223159affce9b") ; dependency of `org-roam-ui'
 #+end_src
 
 #+begin_src emacs-lisp :noweb-ref none :tangle yes
