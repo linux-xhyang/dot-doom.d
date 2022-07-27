@@ -1252,36 +1252,45 @@ Memoize the search in a hash table."
 
 #+begin_src emacs-lisp
 (after! ccls
+  (defun ccls-init-options ()
+    (setq ccls-initialization-options
+            `(:completion (:detailedLabel t)
+              :index (:initialReparseForDependency :json-false :comments 2 :threads 2)
+              :cache (:retainInMemory 2 :format "binary")
+              :diagnostics (:onChange 1000 :onOpen 0 :onSave 0)
+              :clang
+              (:excludeArgs
+               ;; Linux's gcc options. See ccls/wiki
+               ["-falign-jumps=1" "-falign-loops=1" "-fconserve-stack" "-fmerge-constants"
+                "-fno-code-hoisting" "-fno-schedule-insns" "-fno-var-tracking-assignments" "-fsched-pressure"
+                "-mhard-float" "-mindirect-branch-register" "-mindirect-branch=thunk-inline" "-mpreferred-stack-boundary=2"
+                "-mpreferred-stack-boundary=3" "-mpreferred-stack-boundary=4"
+                "-mrecord-mcount" "-mindirect-branch=thunk-extern" "-mno-fp-ret-in-387"
+                "-mskip-rax-setup" "-fno-strict-aliasing" "-fno-common" "-fno-PIE" "-fno-PIE" "-fno-dwarf2-cfi-asm"
+                "-fno-omit-frame-pointer" "-fno-ipa-sra" "-funwind-tables" "-march=armv8-a" "-march=armv7-a"
+                "--param=allow-store-data-races=0" "-Wa arch/x86/kernel/macros.s"]
+               :extraArgs ,(with-temp-buffer
+                             (if (file-exists-p (concat (lsp--suggest-project-root) "/" "compile_commands.json"))
+                                 []
+                               (progn
+                                 (vconcat '("g++" "-Wall" "-Wextra" "-pedantic" "-std=c++17" "-stdlib=libc++")
+                                          (mapcar (lambda (name)
+                                                    (concat "-isystem" name))
+                                                  (irony-pp-system-search-paths)))))
+                             )))))
+
   (add-hook! '(c-mode-local-vars-hook
                c++-mode-local-vars-hook)
              #'irony-pp-generate-ccls-config-file)
+  (add-hook! '(c-mode-local-vars-hook
+               c++-mode-local-vars-hook)
+             #'ccls-init-options)
   (setq
    ccls-args
    (list
     (concat "--log-file="
             (expand-file-name "~/.emacs.d/.cache/ccls.log")))
-   ccls-initialization-options
-   `(:completion (:detailedLabel t)
-     :index (:initialReparseForDependency :json-false :comments 2 :threads 2)
-     :cache (:retainInMemory 2 :format "binary")
-     :diagnostics (:onChange 1000 :onOpen 0 :onSave 0)
-     :clang
-     (:excludeArgs
-      ;; Linux's gcc options. See ccls/wiki
-      ["-falign-jumps=1" "-falign-loops=1" "-fconserve-stack" "-fmerge-constants"
-       "-fno-code-hoisting" "-fno-schedule-insns" "-fno-var-tracking-assignments" "-fsched-pressure"
-       "-mhard-float" "-mindirect-branch-register" "-mindirect-branch=thunk-inline" "-mpreferred-stack-boundary=2"
-       "-mpreferred-stack-boundary=3" "-mpreferred-stack-boundary=4"
-       "-mrecord-mcount" "-mindirect-branch=thunk-extern" "-mno-fp-ret-in-387"
-       "-mskip-rax-setup" "-fno-strict-aliasing" "-fno-common" "-fno-PIE" "-fno-PIE" "-fno-dwarf2-cfi-asm"
-       "-fno-omit-frame-pointer" "-fno-ipa-sra" "-funwind-tables" "-march=armv8-a" "-march=armv7-a"
-       "--param=allow-store-data-races=0" "-Wa arch/x86/kernel/macros.s"]
-      :extraArgs ,(with-temp-buffer
-                   (c++-mode)
-                   (vconcat '("g++" "-Wall" "-Wextra" "-pedantic" "-std=c++17" "-stdlib=libc++")
-                    (mapcar (lambda (name)
-                                      (concat "-isystem" name))
-                                    (irony-pp-system-search-paths)))))))
+   )
   )
 #+end_src
 *** Lsp-java
