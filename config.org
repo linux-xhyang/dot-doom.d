@@ -253,7 +253,7 @@ my home machine is pretty safe, and my laptop is shutdown a lot.
 #+end_src
 performance debug
 #+begin_src emacs-lisp :tangle packages.el
-(package! benchmark-init :pin "02435560415bbadbcf5051fb7042880549170e7e")
+(package! benchmark-init)
 #+end_src
 ** Better defaults
 *** Simple settings
@@ -373,11 +373,11 @@ have flags applied to tweak their behaviour.
 #+begin_src emacs-lisp :tangle "init.el" :noweb no-export :comments no
 ;;; init.el -*- lexical-binding: t; -*-
 
-;; This file controls what Doom modules are enabled and what order they load in.
-;; Press 'K' on a module to view its documentation, and 'gd' to browse its directory.
 (when init-file-debug
   (require 'benchmark-init)
   (add-hook 'doom-first-input-hook #'benchmark-init/deactivate))
+;; This file controls what Doom modules are enabled and what order they load in.
+;; Press 'K' on a module to view its documentation, and 'gd' to browse its directory.
 (doom! :completion
        <<doom-completion>>
 
@@ -2681,7 +2681,6 @@ on that.
 ** Org
 :PROPERTIES:
 :CUSTOM_ID: org
-:header-args:emacs-lisp: :tangle no :noweb-ref org-conf
 :END:
 :intro:
 I really like org mode, I've given some thought to why, and below is the result.
@@ -3279,7 +3278,7 @@ functionality as in LaTeX. Let's try viewing possible output files with this.
 
 The agenda is nice, but a souped up version is nicer.
 #+begin_src emacs-lisp :noweb-ref none :tangle packages.el
-(package! org-super-agenda :pin "3108bc3f725818f0e868520d2c243abe9acbef4e")
+(package! org-super-agenda)
 #+end_src
 
 #+begin_src emacs-lisp :noweb-ref none :tangle yes
@@ -3289,75 +3288,78 @@ The agenda is nice, but a souped up version is nicer.
 
 #+begin_src emacs-lisp
 (after! org-agenda
-  (org-super-agenda-mode))
+  (setq-default org-agenda-skip-scheduled-if-done t
+        org-agenda-skip-deadline-if-done t
+        org-agenda-include-deadlines t
+        org-agenda-block-separator nil
+        org-agenda-tags-column 100 ;; from testing this seems to be a good value
+        org-agenda-compact-blocks t
+        org-agenda-files (list (cl-find-if #'file-exists-p '("~/note/org/gtd/" "~/Nextcloud/note/org/gtd/" "~/.org/"))))
+  (setq-default org-agenda-custom-commands
+        '(("o" "Overview"
+           ((agenda "" ((org-agenda-span 'day)
+                        (org-super-agenda-groups
+                         '((:name "Today"
+                            :time-grid t
+                            :date today
+                            :todo "TODAY"
+                            :scheduled today
+                            :order 1)))))
+            (alltodo "" ((org-agenda-overriding-header "")
+                         (org-super-agenda-groups
+                          '((:name "Next to do"
+                             :todo "NEXT"
+                             :order 1)
+                            (:name "Important"
+                             :tag "Important"
+                             :priority "A"
+                             :order 6)
+                            (:name "Due Today"
+                             :deadline today
+                             :order 2)
+                            (:name "Due Soon"
+                             :deadline future
+                             :order 8)
+                            (:name "Overdue"
+                             :deadline past
+                             :face error
+                             :order 7)
+                            (:name "Assignments"
+                             :tag "Assignment"
+                             :order 10)
+                            (:name "Issues"
+                             :tag "Issue"
+                             :order 12)
+                            (:name "Emacs"
+                             :tag "Emacs"
+                             :order 13)
+                            (:name "Projects"
+                             :tag "Project"
+                             :order 14)
+                            (:name "Research"
+                             :tag "Research"
+                             :order 15)
+                            (:name "To read"
+                             :tag "Read"
+                             :order 30)
+                            (:name "Waiting"
+                             :todo "WAITING"
+                             :order 20)
+                            (:name "University"
+                             :tag "uni"
+                             :order 32)
+                            (:name "Trivial"
+                             :priority<= "E"
+                             :tag ("Trivial" "Unimportant")
+                             :todo ("SOMEDAY" )
+                             :order 90)
+                            (:discard (:tag ("Chore" "Routine" "Daily")))))))))))
+  (org-super-agenda-mode)
+  )
 
-(setq org-agenda-skip-scheduled-if-done t
-      org-agenda-skip-deadline-if-done t
-      org-agenda-include-deadlines t
-      org-agenda-block-separator nil
-      org-agenda-tags-column 100 ;; from testing this seems to be a good value
-      org-agenda-compact-blocks t
-      org-agenda-files (list (cl-find-if #'file-exists-p '("~/note/org/gtd/" "~/Nextcloud/note/org/gtd/" "~/.org/"))))
 
-(setq org-agenda-custom-commands
-      '(("o" "Overview"
-         ((agenda "" ((org-agenda-span 'day)
-                      (org-super-agenda-groups
-                       '((:name "Today"
-                          :time-grid t
-                          :date today
-                          :todo "TODAY"
-                          :scheduled today
-                          :order 1)))))
-          (alltodo "" ((org-agenda-overriding-header "")
-                       (org-super-agenda-groups
-                        '((:name "Next to do"
-                           :todo "NEXT"
-                           :order 1)
-                          (:name "Important"
-                           :tag "Important"
-                           :priority "A"
-                           :order 6)
-                          (:name "Due Today"
-                           :deadline today
-                           :order 2)
-                          (:name "Due Soon"
-                           :deadline future
-                           :order 8)
-                          (:name "Overdue"
-                           :deadline past
-                           :face error
-                           :order 7)
-                          (:name "Assignments"
-                           :tag "Assignment"
-                           :order 10)
-                          (:name "Issues"
-                           :tag "Issue"
-                           :order 12)
-                          (:name "Emacs"
-                           :tag "Emacs"
-                           :order 13)
-                          (:name "Projects"
-                           :tag "Project"
-                           :order 14)
-                          (:name "Research"
-                           :tag "Research"
-                           :order 15)
-                          (:name "To read"
-                           :tag "Read"
-                           :order 30)
-                          (:name "Waiting"
-                           :todo "WAITING"
-                           :order 20)
-                          (:name "University"
-                           :tag "uni"
-                           :order 32)
-                          (:name "Trivial"
-                           :priority<= "E"
-                           :tag ("Trivial" "Unimportant")
-                           :todo ("SOMEDAY" )
-                           :order 90)
-                          (:discard (:tag ("Chore" "Routine" "Daily")))))))))))
+
+
 #+end_src
 **** Capture
 Let's setup some org-capture templates, and make them visually nice to access.
@@ -4187,103 +4189,6 @@ cause issues. Let's make their failure less eventful.
   :around #'org-superstar-mode
   (ignore-errors (apply orig-fn args)))
 #+end_src
-**** Flycheck with org-lint
-
-Org may be simple, but that doesn't mean there's no such thing as malformed Org.
-Thankfully, malformed Org is a much less annoying affair than malformed zipped
-XML (looks at DOCX/ODT...), particularly because there's a rather helpful little
-tool called ~org-lint~ bundled with Org that can tell you about your mistakes.
-
-Flycheck doesn't currently support Org, and there's aren't any packages to do so
-☹. However, in an issue on ~org-lint~ there is [[https://github.com/flycheck/flycheck/issues/1757#issuecomment-759546940][some code]] which apparently works.
-Surely this is what the clipboard was invented for? With that said, let's
-regurgitate the code, cross our fingers, and hope it works.
-
-#+begin_src emacs-lisp
-(defconst flycheck-org-lint-form
-  (flycheck-prepare-emacs-lisp-form
-    (require 'org)
-    (require 'org-attach)
-    (let ((source (car command-line-args-left))
-          (process-default-directory default-directory))
-      (with-temp-buffer
-        (insert-file-contents source 'visit)
-        (setq buffer-file-name source)
-        (setq default-directory process-default-directory)
-        (delay-mode-hooks (org-mode))
-        (setq delayed-mode-hooks nil)
-        (dolist (err (org-lint))
-          (let ((inf (cl-second err)))
-            (princ (elt inf 0))
-            (princ ": ")
-            (princ (elt inf 2))
-            (terpri)))))))
-
-(defconst flycheck-org-lint-variables
-  '(org-directory
-    org-id-locations
-    org-id-locations-file
-    org-attach-id-dir
-    org-attach-use-inheritance
-    org-attach-id-to-path-function-list
-    org-link-parameters)
-  "Variables inherited by the org-lint subprocess.")
-
-(defun flycheck-org-lint-variables-form ()
-  (require 'org-attach)  ; Needed to make variables available
-  `(progn
-     ,@(seq-map (lambda (opt) `(setq-default ,opt ',(symbol-value opt)))
-                (seq-filter #'boundp flycheck-org-lint-variables))))
-
-(flycheck-define-checker org-lint
-  "Org buffer checker using `org-lint'."
-  :command ("emacs" (eval flycheck-emacs-args)
-            "--eval" (eval (concat "(add-to-list 'load-path \""
-                                   (file-name-directory (locate-library "org"))
-                                   "\")"))
-            "--eval" (eval (flycheck-sexp-to-string
-                            (flycheck-org-lint-variables-form)))
-            "--eval" (eval (flycheck-sexp-to-string
-                            (flycheck-org-lint-customisations-form)))
-            "--eval" (eval flycheck-org-lint-form)
-            "--" source)
-  :error-patterns
-  ((error line-start line ": " (message) line-end))
-  :modes org-mode)
-#+end_src
-
-Turns out it almost works. Running =M-x flycheck-verify-setup= after running that
-snippet produces the following:
-#+begin_example
-The following syntax checkers are not registered:
-  - org-lint
-Try adding these syntax checkers to `flycheck-checkers'.
-#+end_example
-
-Well that's very nice and helpful. We'll just do that 🙂.
-#+begin_src emacs-lisp
-(add-to-list 'flycheck-checkers 'org-lint)
-#+end_src
-
-It was missing custom link types, but that's easily fixed just by adding
-~org-link-parameters~ to ~flycheck-org-lint-variables~.
-
-One remaining little annoyance is that it reports extra =#+options= that I've
-added to Org as errors. So we need to tell ~org-lint~ about them without having it
-load my whole config. Code duplication isn't great, but at least this isn't
-much.
-
-#+name: org-syntax-modifications
-#+begin_src emacs-lisp :tangle no
-(defun flycheck-org-lint-customisations-form ()
-  `(progn
-     (require 'ox)
-     (cl-pushnew '(:latex-cover-page nil "coverpage" nil)
-                 (org-export-backend-options (org-export-get-backend 'latex)))
-     (cl-pushnew '(:latex-font-set nil "fontset" nil)
-                 (org-export-backend-options (org-export-get-backend 'latex)))))
-#+end_src
-
 *** Visuals
 
 Here I try to do two things: improve the styling of the various documents, via
